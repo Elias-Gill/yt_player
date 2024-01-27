@@ -3,7 +3,12 @@ This is a simple wrapper for the youtube API that search and list youtube videos
 
 
 ### Dependencies
-For playing music this program uses [MPV player](https://mpv.io/).
+For playing music this program uses [MPV player](https://mpv.io/) and (youtube-dl)[https://github.com/ytdl-org/youtube-dl].
+
+Windows users can use chocolatey:
+```
+choco install mpv youtube-dl
+```
 
 # Building
 
