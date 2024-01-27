@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/elias-gill/yt_player/globals"
@@ -12,9 +13,11 @@ import (
 )
 
 type item struct {
-	title string
-	id    string
+	video yt_api.Video
 }
+
+func (i item) Title() string { return i.video.Title }
+func (i item) Id() string    { return i.video.Id }
 
 // filter is deactivated here
 func (i item) FilterValue() string { return "" }
@@ -30,7 +33,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 		return
 	}
 
-	str := fmt.Sprintf("%d. %s", index+1, i.title)
+	str := fmt.Sprintf("%d. %s", index+1, i.video.Title)
 
 	fn := itemStyle.Render
 	if index == m.Index() {
@@ -51,8 +54,8 @@ func generateVideoList(input string) list.Model {
 		globals.GetApiKey(),
 	)
 
-	for key, value := range videos {
-		items = append(items, item{id: value, title: key})
+	for _, video := range videos {
+		items = append(items, item{video: video})
 	}
 
 	l := list.New(items, itemDelegate{}, 80, 25)
@@ -65,5 +68,62 @@ func generateVideoList(input string) list.Model {
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = helpStyle
 
+	l.KeyMap = keyMaps()
+
 	return l
+}
+
+func keyMaps() list.KeyMap {
+	return list.KeyMap{
+		// Browsing.
+		CursorUp: key.NewBinding(
+			key.WithKeys("up", "k"),
+			key.WithHelp("↑/k", "up"),
+		),
+		CursorDown: key.NewBinding(
+			key.WithKeys("down", "j"),
+			key.WithHelp("↓/j", "down"),
+		),
+		PrevPage: key.NewBinding(
+			key.WithKeys("left", "h", "pgup", "b", "u"),
+			key.WithHelp("←/h/pgup", "prev page"),
+		),
+		NextPage: key.NewBinding(
+			key.WithKeys("right", "l", "pgdown", "f", "d"),
+			key.WithHelp("→/l/pgdn", "next page"),
+		),
+		GoToStart: key.NewBinding(
+			key.WithKeys("home", "g"),
+			key.WithHelp("g/home", "go to start"),
+		),
+		GoToEnd: key.NewBinding(
+			key.WithKeys("end", "G"),
+			key.WithHelp("G/end", "go to end"),
+		),
+		Filter: key.NewBinding(
+			key.WithKeys("/"),
+			key.WithHelp("/", "Search mode"),
+		),
+
+		// Quitting.
+		Quit: key.NewBinding(
+			key.WithKeys("q", "esc"),
+			key.WithHelp("q/esc", "Exit"),
+		),
+
+		ForceQuit: key.NewBinding(
+			key.WithKeys("ctrl+c"),
+			key.WithHelp("ctrl+c", "Exit"),
+		),
+
+        // Toggle help.
+        ShowFullHelp: key.NewBinding(
+            key.WithKeys("?"),
+            key.WithHelp("?", "more"),
+        ),
+        CloseFullHelp: key.NewBinding(
+            key.WithKeys("?"),
+            key.WithHelp("?", "close help"),
+        ),
+	}
 }

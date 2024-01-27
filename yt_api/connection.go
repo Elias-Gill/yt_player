@@ -8,7 +8,12 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
-func RetrieveVideos(query string, maxResults int64, key string) map[string]string {
+type Video struct {
+	Title string
+	Id    string
+}
+
+func RetrieveVideos(query string, maxResults int64, key string) []Video {
 	service, err := youtube.NewService(context.TODO(), option.WithAPIKey(key))
 	if err != nil {
 		log.Fatalf("Error creating new YouTube client: %v", err)
@@ -22,12 +27,12 @@ func RetrieveVideos(query string, maxResults int64, key string) map[string]strin
 	response, _ := call.Do()
 
 	// Group video, channel, and playlist results in separate lists.
-	videos := make(map[string]string)
+	videos := []Video{}
 
 	// Iterate through each item and add it to the correct list.
 	for _, item := range response.Items {
 		if item.Id.Kind == "youtube#video" {
-			videos[item.Snippet.Title] = item.Id.VideoId
+			videos = append(videos, Video{item.Snippet.Title, item.Id.VideoId})
 		}
 	}
 
