@@ -8,12 +8,11 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/elias-gill/yt_player/globals"
 	"github.com/elias-gill/yt_player/yt_api"
 )
 
 type item struct {
-	video yt_api.Video
+	video yt_api.Result
 }
 
 func (i item) Title() string { return i.video.Title }
@@ -48,13 +47,9 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 func generateVideoList(input string) list.Model {
 	items := []list.Item{}
 
-	videos := yt_api.RetrieveVideos(
-		input,
-		globals.GetMaxResults(),
-		globals.GetApiKey(),
-	)
+	results := yt_api.RetrieveResults(input)
 
-	for _, video := range videos {
+	for _, video := range results.Videos {
 		items = append(items, item{video: video})
 	}
 
@@ -116,14 +111,14 @@ func keyMaps() list.KeyMap {
 			key.WithHelp("ctrl+c", "Exit"),
 		),
 
-        // Toggle help.
-        ShowFullHelp: key.NewBinding(
-            key.WithKeys("?"),
-            key.WithHelp("?", "more"),
-        ),
-        CloseFullHelp: key.NewBinding(
-            key.WithKeys("?"),
-            key.WithHelp("?", "close help"),
-        ),
+		// Toggle help.
+		ShowFullHelp: key.NewBinding(
+			key.WithKeys("?"),
+			key.WithHelp("?", "more"),
+		),
+		CloseFullHelp: key.NewBinding(
+			key.WithKeys("?"),
+			key.WithHelp("?", "close help"),
+		),
 	}
 }

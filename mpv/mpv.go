@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 )
 
 const yt_link = "https://www.youtube.com/watch?v="
@@ -27,8 +28,16 @@ func NewPlayer(ytId string) *exec.Cmd {
 }
 
 func KillInstance(instance *exec.Cmd) {
-	// TODO: fix windows kill error
-	if instance != nil {
+    // TEST: this should be tested on a windows environment
+    if runtime.GOOS == "windows"{
+        err := exec.Command("taskkill.exe", "/im", "mpv.exe", "/f").Run()
+        if err != nil {
+            // TODO: make a log system
+        }
+        return
+    } 
+
+    if instance != nil {
 		instance.Process.Kill()
 	}
 }
