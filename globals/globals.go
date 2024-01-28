@@ -7,19 +7,19 @@ import (
 )
 
 var (
-    // flags 
+	// flags
 	maxResults = flag.Int64("max-results", 20, "Max YouTube results")
 	keyFlag    = flag.String("key", "", "Youtube developer key")
 
-	apiKey        string
+	apiKey string
 )
 
 func GetMaxResults() int64 {
-    return *maxResults
+	return *maxResults
 }
 
 func GetApiKey() string {
-    return apiKey
+	return apiKey
 }
 
 func ParseFlags() {

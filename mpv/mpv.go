@@ -28,16 +28,16 @@ func NewPlayer(ytId string) *exec.Cmd {
 }
 
 func KillInstance(instance *exec.Cmd) {
-    // TEST: this should be tested on a windows environment
-    if runtime.GOOS == "windows"{
-        err := exec.Command("taskkill.exe", "/im", "mpv.exe", "/f").Run()
-        if err != nil {
-            // TODO: make a log system
-        }
-        return
-    } 
+	// TEST: this should be tested on a windows environment
+	if runtime.GOOS == "windows" {
+		err := exec.Command("taskkill.exe", "/im", "mpv.exe", "/f").Run()
+		if err != nil {
+			// TODO: make a log system
+		}
+		return
+	}
 
-    if instance != nil {
+	if instance != nil {
 		instance.Process.Kill()
 	}
 }

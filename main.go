@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-    globals.ParseFlags()
+	globals.ParseFlags()
 	tui.InitTUI()
 }
