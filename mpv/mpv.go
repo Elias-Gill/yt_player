@@ -36,7 +36,7 @@ func StartPlayer() *exec.Cmd {
 	time.Sleep(time.Second)
 
 	ipc := mpv.NewIPCClient("/tmp/mpvsocket")
-	player = mpv.NewClient(ipc) // Lowlevel client
+	player = mpv.NewClient(ipc)
 
 	return cmd
 }
@@ -45,10 +45,10 @@ func StopPlayer() {
 	cmd.Process.Kill()
 }
 
-func commandExists(cmd string) bool {
-	_, err := exec.LookPath(cmd)
-
-	return err == nil
+// detach the player but stop idle mode, so the mpv process
+// would stop after the song is over
+func DetachPlayer() {
+	player.SetProperty("idle", "no")
 }
 
 func ChangeSong(url string) {
@@ -75,9 +75,15 @@ func LessFiveSecs() {
 	player.SetProperty("time-pos", newTime)
 }
 
-func GetSongLength() int {
-	property, _ := player.GetProperty("duration")
-	duration, _ := strconv.Atoi(property)
+func GetSongStatus() string {
+	duration, _ := player.GetFloatProperty("duration")
+	left, _ := player.GetFloatProperty("time-pos")
 
-	return duration
+	return time.Duration(left*1e9).String() + " / " + time.Duration(duration*1e9).String()
+}
+
+func commandExists(cmd string) bool {
+	_, err := exec.LookPath(cmd)
+
+	return err == nil
 }

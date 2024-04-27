@@ -17,6 +17,8 @@ import (
 
 type window int
 
+type TickMsg time.Time
+
 const (
 	SEARCH_WINDOW = iota
 	LISTING_WINDOW
@@ -33,10 +35,14 @@ type model struct {
 	list      list.Model
 	textInput textinput.Model
 	window    window
-	curSong   string
+	width     int
+	height    int
 
 	playing     bool
 	firstSearch bool
+
+	songStatus string
+	curSong    string
 }
 
 func main() {
@@ -52,29 +58,45 @@ func main() {
 		playing:     false,
 	}
 
-	// NOTE: tea.Every() for updating every x seconds
-
 	if _, err := tea.NewProgram(m, tea.WithAltScreen()).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}
 }
 
+// to make a timer for updating mpv actual time
+func tickEvery() tea.Cmd {
+	return tea.Every(time.Second, func(t time.Time) tea.Msg {
+		return TickMsg(t)
+	})
+}
+
 func (m model) Init() tea.Cmd {
-	return nil
+	return tickEvery()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case TickMsg:
+		m.songStatus = mpv.GetSongStatus()
+		m.list.SetSize(m.width, m.height-2)
+		return m, tickEvery()
+
 	case tea.WindowSizeMsg:
 		m.list.SetSize(msg.Width, msg.Height-2)
 		m.textInput.Update(msg)
+		m.width = msg.Width
+		m.height = msg.Height
 		return m, nil
 
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c": // quit app and close the player
 			m.window = QUIT
+			return m, tea.Quit
+
+		case "ctrl+q": // quit "detaching" mpv
+			mpv.DetachPlayer()
 			return m, tea.Quit
 
 		default:
@@ -99,13 +121,6 @@ func (m model) View() string {
 	switch m.window {
 	case QUIT:
 		mpv.StopPlayer()
-
-		// TODO: delete
-		go func() {
-			time.Sleep(1 * time.Second)
-			os.Exit(0)
-		}()
-
 		return tui.QuitTextStyle.Render(
 			"Closing player instance and quitting... ")
 
@@ -113,15 +128,17 @@ func (m model) View() string {
 		return tui.TitleStyle.Render(searchTitle) + "\n\n" + m.textInput.View()
 
 	default: // MODE_LISTING
-		text := "\n\n"
+		text := ""
 
+		// to be honest, i dont know why the pause and play
+		// are inverted but it works
 		if m.playing {
-			text += play
-		} else {
 			text += pause
+		} else {
+			text += play
 		}
 
-		m.list.Title = text + m.curSong
+		m.list.Title = text + m.curSong + "\t" + m.songStatus
 
 		return m.list.View()
 	}
@@ -129,7 +146,7 @@ func (m model) View() string {
 
 func (m model) updateTrackList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
-	case "/": // enter searching mode
+	case "/": // enter search mode
 		m.window = SEARCH_WINDOW
 		return m, nil
 
@@ -139,15 +156,15 @@ func (m model) updateTrackList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 		return m, nil
 
-	case "+", "=": // select song
+	case "+", "=": // +5 secs
 		mpv.PlusFiveSecs()
+
+	case "-": // -5 secs
+		mpv.LessFiveSecs()
 
 	case "esc", "q": // select song
 		m.window = QUIT
 		return m, nil
-
-	case "-": // select song
-		mpv.LessFiveSecs()
 
 	case "enter": // select song
 		curItem, ok := m.list.SelectedItem().(tui.ListItem)
@@ -155,7 +172,7 @@ func (m model) updateTrackList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		m.curSong = string(curItem.Title())
+		m.curSong = curItem.Title()
 		mpv.ChangeSong(yt_api.Yt_url + curItem.Id())
 
 		return m, nil
@@ -184,8 +201,8 @@ func (m model) updateSearchInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 		return m, nil
 
-	default:
-		m.textInput, _ = m.textInput.Update(msg)
-		return m, nil
 	}
+
+	m.textInput, _ = m.textInput.Update(msg)
+	return m, nil
 }
