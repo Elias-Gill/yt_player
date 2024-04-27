@@ -4,7 +4,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 )
 
-func newInput() textinput.Model {
+func NewInput() textinput.Model {
 	ti := textinput.New()
 	ti.Placeholder = "Your music"
 	ti.Focus()

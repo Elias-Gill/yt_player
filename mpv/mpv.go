@@ -5,39 +5,79 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"runtime"
+	"strconv"
+	"time"
+
+	"github.com/blang/mpv"
 )
 
-const yt_link = "https://www.youtube.com/watch?v="
+var player *mpv.Client
+var cmd *exec.Cmd
 
-func NewPlayer(ytId string) *exec.Cmd {
-	url := yt_link + ytId
-
-	cmd := exec.Command("mpv", "--no-video", url)
-	if cmd == nil {
-		fmt.Println("Cannot find 'mpv' player on your machine.")
+func StartPlayer() *exec.Cmd {
+	if !commandExists("mpv") {
+		fmt.Println("Cannot find mpv player")
 		os.Exit(1)
 	}
+
+	if !commandExists("youtube-dl") {
+		fmt.Println("Cannot find youtube-dl executable")
+		os.Exit(1)
+	}
+
+	cmd = exec.Command("mpv", "--idle=yes", "--input-ipc-server=/tmp/mpvsocket", "--no-video")
 
 	if err := cmd.Start(); err != nil {
-		fmt.Println("Error running mpv: ", err.Error())
+		fmt.Println("Error starting mpv player: ", err.Error())
 		os.Exit(1)
 	}
+
+	// Little hacky but anyways
+	time.Sleep(time.Second)
+
+	ipc := mpv.NewIPCClient("/tmp/mpvsocket")
+	player = mpv.NewClient(ipc) // Lowlevel client
 
 	return cmd
 }
 
-func KillInstance(instance *exec.Cmd) {
-	// TEST: this should be tested on a windows environment
-	if runtime.GOOS == "windows" {
-		err := exec.Command("taskkill.exe", "/im", "mpv.exe", "/f").Run()
-		if err != nil {
-			// TODO: make a log system
-		}
-		return
-	}
+func StopPlayer() {
+	cmd.Process.Kill()
+}
 
-	if instance != nil {
-		instance.Process.Kill()
+func commandExists(cmd string) bool {
+	_, err := exec.LookPath(cmd)
+
+	return err == nil
+}
+
+func ChangeSong(url string) {
+	err := player.Loadfile(url, mpv.LoadFileModeReplace)
+	if err != nil {
+		panic(err)
 	}
+}
+
+func TogglePause() {
+	p, _ := player.Pause()
+	player.SetPause(!p)
+}
+
+func PlusFiveSecs() {
+	curTime, _ := player.GetFloatProperty("time-pos")
+	newTime := string(strconv.Itoa(int(curTime + 5)))
+	player.SetProperty("time-pos", newTime)
+}
+
+func LessFiveSecs() {
+	curTime, _ := player.GetFloatProperty("time-pos")
+	newTime := string(strconv.Itoa(int(curTime - 5)))
+	player.SetProperty("time-pos", newTime)
+}
+
+func GetSongLength() int {
+	property, _ := player.GetProperty("duration")
+	duration, _ := strconv.Atoi(property)
+
+	return duration
 }

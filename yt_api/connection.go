@@ -14,6 +14,8 @@ const (
 	TYPE_VIDEO
 )
 
+const Yt_url = "https://www.youtube.com/watch?v="
+
 type Result struct {
 	Title string
 	Id    string
