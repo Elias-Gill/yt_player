@@ -77,9 +77,9 @@ func LessFiveSecs() {
 
 func GetSongStatus() string {
 	duration, _ := player.GetFloatProperty("duration")
-	left, _ := player.GetFloatProperty("time-pos")
+	curPos, _ := player.GetFloatProperty("time-pos")
 
-	return time.Duration(left*1e9).String() + " / " + time.Duration(duration*1e9).String()
+	return time.Duration(curPos*1e9).String() + " / " + time.Duration(duration*1e9).String()
 }
 
 func commandExists(cmd string) bool {

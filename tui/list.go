@@ -44,7 +44,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 	fmt.Fprint(w, fn(str))
 }
 
-func GenerateVideoList(input string) list.Model {
+func generateVideoList(input string) list.Model {
 	items := []list.Item{}
 
 	results := yt_api.RetrieveResults(input)
