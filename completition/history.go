@@ -11,9 +11,9 @@ var (
 	history []string
 	cache   string
 
-    // magic numbers, dont touch it
+	// magic numbers, dont touch it
 	final    int = -1
-	position int = 0 
+	position int = 0
 )
 
 // Loads the history file into memory. If the history file is not available, the history
@@ -63,7 +63,7 @@ func NextEntry(entry string) string {
 
 	if position > 0 {
 		position--
-        entry = history[position]
+		entry = history[position]
 	}
 
 	return entry

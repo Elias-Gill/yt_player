@@ -14,6 +14,8 @@ import (
 var player *mpv.Client
 var cmd *exec.Cmd
 
+const mpvSocket = "/tmp/mpvsocket"
+
 func StartPlayer() *exec.Cmd {
 	if !commandExists("mpv") {
 		fmt.Println("Cannot find mpv player")
@@ -25,14 +27,14 @@ func StartPlayer() *exec.Cmd {
 		os.Exit(1)
 	}
 
-	cmd = exec.Command("mpv", "--idle=yes", "--input-ipc-server=/tmp/mpvsocket", "--no-video")
+	cmd = exec.Command("mpv", "--idle=yes", "--input-ipc-server="+mpvSocket, "--no-video")
 
 	if err := cmd.Start(); err != nil {
 		fmt.Println("Error starting mpv player: ", err.Error())
 		os.Exit(1)
 	}
 
-	// Little hacky but anyways
+	// wait for the mpv process to start. A little hacky but anyways
 	time.Sleep(time.Second)
 
 	ipc := mpv.NewIPCClient("/tmp/mpvsocket")

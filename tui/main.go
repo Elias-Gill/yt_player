@@ -36,6 +36,8 @@ const (
 )
 
 var (
+	// to be honest, i dont know why the play and play
+	// are inverted but it works
 	play        = "▷  Playing: "
 	pause       = "⏸︎  Pause: "
 	searchTitle = "Search for music on youtube"
@@ -81,8 +83,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c": // quit app and close the player
-			m.window = QUIT
-			return m, tea.Quit
+			return m.quitPlayer()
 
 		case "ctrl+q": // quit "detaching" mpv
 			mpv.DetachPlayer()
@@ -97,8 +98,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m.updateTrackList(msg)
 
 			default:
-				m.window = QUIT
-				return m, tea.Quit
+				return m.quitPlayer()
 			}
 		}
 	}
@@ -107,32 +107,21 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	switch m.window {
-	case QUIT:
-		mpv.StopPlayer()
-		completition.PersistHistory()
-
-		return QuitTextStyle.Render(
-			"Closing player instance and quitting... ")
-
-	case SEARCH_WINDOW:
+	if m.window == SEARCH_WINDOW {
 		return TitleStyle.Render(searchTitle) + "\n\n" + m.textInput.View()
-
-	default: // MODE_LISTING
-		text := ""
-
-		// to be honest, i dont know why the pause and play
-		// are inverted but it works
-		if m.playing {
-			text += pause
-		} else {
-			text += play
-		}
-
-		m.list.Title = text + m.curSong + "\t" + m.songStatus
-
-		return m.list.View()
 	}
+
+	// LISTING_WINDOW
+	text := ""
+	if m.playing {
+		text += pause
+	} else {
+		text += play
+	}
+
+	m.list.Title = text + m.curSong + "\t" + m.songStatus
+
+	return m.list.View()
 }
 
 func (m model) updateTrackList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -153,9 +142,8 @@ func (m model) updateTrackList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "-": // -5 secs
 		mpv.LessFiveSecs()
 
-	case "esc", "q": // select song
-		m.window = QUIT
-		return m, nil
+	case "q": // select song
+		return m.quitPlayer()
 
 	case "enter": // select song
 		curItem, ok := m.list.SelectedItem().(ListItem)
@@ -176,11 +164,6 @@ func (m model) updateTrackList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 func (m model) updateSearchInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch keypress := msg.String(); keypress {
 	case "esc": // cancel search
-		if m.firstSearch {
-			m.window = QUIT
-			return m, nil
-		}
-
 		m.window = LISTING_WINDOW
 		return m, nil
 
@@ -206,4 +189,12 @@ func (m model) updateSearchInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	m.textInput, _ = m.textInput.Update(msg)
 	return m, nil
+}
+
+func (m model) quitPlayer() (model, tea.Cmd) {
+	m.window = QUIT
+	mpv.StopPlayer()
+	completition.PersistHistory()
+
+	return m, tea.Quit
 }

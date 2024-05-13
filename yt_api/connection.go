@@ -29,9 +29,10 @@ type Results struct {
 
 func RetrieveResults(query string) Results {
 	service, err := youtube.NewService(
-		context.TODO(),
+		context.Background(),
 		option.WithAPIKey(globals.GetApiKey()),
 	)
+
 	if err != nil {
 		log.Fatalf("Error creating new YouTube client: %v", err)
 	}
