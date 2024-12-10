@@ -3,11 +3,11 @@ package yt_api
 import (
 	"testing"
 
-	"github.com/elias-gill/yt_player/globals"
+	"github.com/elias-gill/yt_player/settings"
 )
 
 func TestYTConnection(t *testing.T) {
-	globals.ParseFlags()
+	settings.ParseConfig()
 	res := RetrieveResults("")
 
 	if len(res.Videos) == 0 {

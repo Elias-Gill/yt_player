@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/elias-gill/yt_player/completition"
-	"github.com/elias-gill/yt_player/globals"
+	"github.com/elias-gill/yt_player/settings"
 	"github.com/elias-gill/yt_player/tui"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	globals.ParseFlags()
+	settings.ParseConfig()
 	mpv.StartPlayer()
 	completition.LoadHistory()
 

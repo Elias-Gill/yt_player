@@ -1,4 +1,4 @@
-package globals
+package settings
 
 import (
 	"flag"
@@ -22,7 +22,7 @@ func GetApiKey() string {
 	return apiKey
 }
 
-func ParseFlags() {
+func ParseConfig() {
 	flag.Parse()
 
 	if *keyFlag != "" {

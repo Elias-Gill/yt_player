@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/elias-gill/yt_player/globals"
+	"github.com/elias-gill/yt_player/settings"
 	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
 )
@@ -30,7 +30,7 @@ type Results struct {
 func RetrieveResults(query string) Results {
 	service, err := youtube.NewService(
 		context.Background(),
-		option.WithAPIKey(globals.GetApiKey()),
+		option.WithAPIKey(settings.GetApiKey()),
 	)
 
 	if err != nil {
@@ -40,7 +40,7 @@ func RetrieveResults(query string) Results {
 	// Make the API call to YouTube.
 	call := service.Search.List([]string{"id", "snippet"}).
 		Q(query).
-		MaxResults(globals.GetMaxResults())
+		MaxResults(settings.GetMaxResults())
 
 	response, _ := call.Do()
 

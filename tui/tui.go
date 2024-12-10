@@ -36,7 +36,7 @@ const (
 )
 
 var (
-	// to be honest, i dont know why the play and play
+	// To be honest, i dont know why the play and pause
 	// are inverted but it works
 	play        = "▷  Playing: "
 	pause       = "⏸︎  Pause: "
