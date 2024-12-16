@@ -2,38 +2,37 @@ package settings
 
 import (
 	"flag"
-	"fmt"
+	"log"
 	"os"
 )
 
-var (
+type Settings struct {
 	// flags
-	maxResults = flag.Int64("max-results", 20, "Max YouTube results")
-	keyFlag    = flag.String("key", "", "Youtube developer key")
-
-	apiKey string
-)
-
-func GetMaxResults() int64 {
-	return *maxResults
+	maxResults int64
+	apiKey     string
 }
 
-func GetApiKey() string {
-	return apiKey
-}
-
-func ParseConfig() {
+func MustParseConfig() *Settings {
+	keyFlag := *flag.String("key", "", "Youtube developer key")
+	maxResults := *flag.Int64("max-results", 20, "Max YouTube results")
 	flag.Parse()
 
-	if *keyFlag != "" {
-		apiKey = *keyFlag
+	var apiKey string
+	if keyFlag != "" {
+		apiKey = keyFlag
 	} else {
 		var exists bool
 		apiKey, exists = os.LookupEnv("YT_PLAYER_KEY")
 
 		if !exists {
-			fmt.Println("Cannot retrieve api key. \n\nPlease submit the key using the '--key=<key>' flag \nor setting the 'YT_PLAYER_KEY' env variable")
-			os.Exit(1)
+			log.Fatal("Cannot retrieve youtube API key." +
+				"\n\nPlease submit the API key using the '--key=<key>' flag" +
+				"\nor setting the 'YT_PLAYER_KEY' env variable")
 		}
+	}
+
+	return &Settings{
+		maxResults: maxResults,
+		apiKey:     apiKey,
 	}
 }

@@ -1,200 +1,43 @@
 package tui
 
 import (
-	"time"
-
-	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/elias-gill/yt_player/completition"
-	"github.com/elias-gill/yt_player/mpv"
-	"github.com/elias-gill/yt_player/yt_api"
+	"github.com/elias-gill/yt_player/context"
+	"github.com/elias-gill/yt_player/tui/components"
 )
 
-type model struct {
-	list      list.Model
-	textInput textinput.Model
-	window    window
-	width     int
-	height    int
-
-	playing     bool
-	firstSearch bool
-
-	songStatus string
-	curSong    string
+type Tui struct {
+	context   *context.Context
+	textInput components.Input
 }
 
-type window int
-
-type TickMsg time.Time
-
-const (
-	SEARCH_WINDOW = iota
-	LISTING_WINDOW
-	QUIT
-)
-
-var (
-	// To be honest, i dont know why the play and pause
-	// are inverted but it works
-	play        = "▷  Playing: "
-	pause       = "⏸︎  Pause: "
-	searchTitle = "Search for music on youtube"
-)
-
-func NewModel() tea.Model {
-	m := model{
-		window:      SEARCH_WINDOW,
-		textInput:   NewInput(),
-		list:        NewList(),
-		firstSearch: true,
-		playing:     false,
+func NewModel(ctx *context.Context) tea.Model {
+	return Tui{
+		context:   ctx,
+		textInput: components.NewInput(ctx),
 	}
-
-	return m
 }
 
-// to make a timer for updating mpv actual time
-func tickEvery() tea.Cmd {
-	return tea.Every(time.Second, func(t time.Time) tea.Msg {
-		return TickMsg(t)
-	})
+func (t Tui) View() string {
+	return t.textInput.View()
 }
 
-func (m model) Init() tea.Cmd {
-	return tickEvery()
+func (t Tui) Init() tea.Cmd {
+	return nil
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (t Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case TickMsg:
-		m.songStatus = mpv.GetSongStatus()
-		m.list.SetSize(m.width, m.height-2)
-		return m, tickEvery()
-
-	case tea.WindowSizeMsg:
-		m.list.SetSize(msg.Width, msg.Height-2)
-		m.textInput.Update(msg)
-		m.width = msg.Width
-		m.height = msg.Height
-		return m, nil
-
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c": // quit app and close the player
-			return m.quitPlayer()
-
-		case "ctrl+q": // quit "detaching" mpv
-			mpv.DetachPlayer()
-			return m, tea.Quit
-
-		default:
-			switch m.window {
-			case SEARCH_WINDOW:
-				return m.updateSearchInput(msg)
-
-			case LISTING_WINDOW:
-				return m.updateTrackList(msg)
-
-			default:
-				return m.quitPlayer()
-			}
+		if tea.KeyCtrlC == msg.Type {
+			return t, tea.Quit
 		}
+	case tea.WindowSizeMsg:
+		t.context.WinHeight = msg.Height
+		t.context.WinWidth = msg.Width
 	}
 
-	return m, nil
-}
-
-func (m model) View() string {
-	if m.window == SEARCH_WINDOW {
-		return TitleStyle.Render(searchTitle) + "\n\n" + m.textInput.View()
-	}
-
-	// LISTING_WINDOW
-	text := ""
-	if m.playing {
-		text += pause
-	} else {
-		text += play
-	}
-
-	m.list.Title = text + m.curSong + "\t" + m.songStatus
-
-	return m.list.View()
-}
-
-func (m model) updateTrackList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	switch msg.String() {
-	case "/": // enter search mode
-		m.window = SEARCH_WINDOW
-		return m, nil
-
-	case tea.KeySpace.String(): // toggle pause
-		mpv.TogglePause()
-		m.playing = !m.playing
-
-		return m, nil
-
-	case "+", "=": // +5 secs
-		mpv.PlusFiveSecs()
-
-	case "-": // -5 secs
-		mpv.LessFiveSecs()
-
-	case "q": // select song
-		return m.quitPlayer()
-
-	case "enter": // select song
-		curItem, ok := m.list.SelectedItem().(ListItem)
-		if !ok {
-			return m, nil
-		}
-
-		m.curSong = curItem.Title()
-		mpv.ChangeSong(yt_api.Yt_url + curItem.Id())
-
-		return m, nil
-	}
-
-	m.list, _ = m.list.Update(msg)
-	return m, nil
-}
-
-func (m model) updateSearchInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	switch keypress := msg.String(); keypress {
-	case "esc": // cancel search
-		m.window = LISTING_WINDOW
-		return m, nil
-
-	case "enter":
-		value := m.textInput.Value()
-
-		m.list = generateVideoList(value)
-		completition.AddHistoryEntry(value)
-
-		m.window = LISTING_WINDOW
-		m.firstSearch = false
-
-		return m, nil
-
-	case tea.KeyUp.String():
-		actual := m.textInput.Value()
-		m.textInput.SetValue(completition.NextEntry(actual))
-
-	case tea.KeyDown.String():
-		actual := m.textInput.Value()
-		m.textInput.SetValue(completition.PrevEntry(actual))
-	}
-
-	m.textInput, _ = m.textInput.Update(msg)
-	return m, nil
-}
-
-func (m model) quitPlayer() (model, tea.Cmd) {
-	m.window = QUIT
-	mpv.StopPlayer()
-	completition.PersistHistory()
-
-	return m, tea.Quit
+	var cmd tea.Cmd
+	t.textInput, cmd = t.textInput.Update(msg)
+	return t, cmd
 }

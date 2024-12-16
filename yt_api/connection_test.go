@@ -7,7 +7,7 @@ import (
 )
 
 func TestYTConnection(t *testing.T) {
-	settings.ParseConfig()
+	settings.MustParseConfig()
 	res := RetrieveResults("")
 
 	if len(res.Videos) == 0 {

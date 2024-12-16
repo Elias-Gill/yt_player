@@ -11,12 +11,16 @@ import (
 	"github.com/blang/mpv"
 )
 
-var player *mpv.Client
-var cmd *exec.Cmd
-
 const mpvSocket = "/tmp/mpvsocket"
 
-func StartPlayer() *exec.Cmd {
+type MpvPlayer struct {
+	player *mpv.Client
+	cmd    *exec.Cmd
+}
+
+// Generates a new instance of the MpvPlayer cmd. Panics if MPV or youtube-dl executables cannot
+// be located in the path, or if the socket connection with MPV fails.
+func MustInitPlayer() *MpvPlayer {
 	if !commandExists("mpv") {
 		fmt.Println("Cannot find mpv player")
 		os.Exit(1)
@@ -27,7 +31,7 @@ func StartPlayer() *exec.Cmd {
 		os.Exit(1)
 	}
 
-	cmd = exec.Command("mpv", "--idle=yes", "--input-ipc-server="+mpvSocket, "--no-video")
+	cmd := exec.Command("mpv", "--idle=yes", "--input-ipc-server="+mpvSocket, "--no-video")
 
 	if err := cmd.Start(); err != nil {
 		fmt.Println("Error starting mpv player: ", err.Error())
@@ -38,54 +42,56 @@ func StartPlayer() *exec.Cmd {
 	time.Sleep(time.Second)
 
 	ipc := mpv.NewIPCClient("/tmp/mpvsocket")
-	player = mpv.NewClient(ipc)
+	player := mpv.NewClient(ipc)
 
-	return cmd
+	return &MpvPlayer{
+		player: player,
+		cmd:    cmd,
+	}
 }
 
-func StopPlayer() {
-	cmd.Process.Kill()
+func (m MpvPlayer) StopPlayer() {
+	m.cmd.Process.Kill()
 }
 
 // detach the player but stop idle mode, so the mpv process
 // would stop after the song is over
-func DetachPlayer() {
-	player.SetProperty("idle", "no")
+func (m MpvPlayer) DetachPlayer() {
+	m.player.SetProperty("idle", "no")
 }
 
-func ChangeSong(url string) {
-	err := player.Loadfile(url, mpv.LoadFileModeReplace)
+func (m MpvPlayer) ChangeSong(url string) {
+	err := m.player.Loadfile(url, mpv.LoadFileModeReplace)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func TogglePause() {
-	p, _ := player.Pause()
-	player.SetPause(!p)
+func (m MpvPlayer) TogglePause() {
+	p, _ := m.player.Pause()
+	m.player.SetPause(!p)
 }
 
-func PlusFiveSecs() {
-	curTime, _ := player.GetFloatProperty("time-pos")
+func (m MpvPlayer) PlusFiveSecs() {
+	curTime, _ := m.player.GetFloatProperty("time-pos")
 	newTime := string(strconv.Itoa(int(curTime + 5)))
-	player.SetProperty("time-pos", newTime)
+	m.player.SetProperty("time-pos", newTime)
 }
 
-func LessFiveSecs() {
-	curTime, _ := player.GetFloatProperty("time-pos")
+func (m MpvPlayer) LessFiveSecs() {
+	curTime, _ := m.player.GetFloatProperty("time-pos")
 	newTime := string(strconv.Itoa(int(curTime - 5)))
-	player.SetProperty("time-pos", newTime)
+	m.player.SetProperty("time-pos", newTime)
 }
 
-func GetSongStatus() string {
-	duration, _ := player.GetFloatProperty("duration")
-	curPos, _ := player.GetFloatProperty("time-pos")
+func (m MpvPlayer) GetSongStatus() string {
+	duration, _ := m.player.GetFloatProperty("duration")
+	curPos, _ := m.player.GetFloatProperty("time-pos")
 
 	return time.Duration(curPos*1e9).String() + " / " + time.Duration(duration*1e9).String()
 }
 
 func commandExists(cmd string) bool {
 	_, err := exec.LookPath(cmd)
-
 	return err == nil
 }
