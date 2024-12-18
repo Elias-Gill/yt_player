@@ -2,16 +2,16 @@ package main
 
 import (
 	"fmt"
-	"os"
+	`os`
 
-	"github.com/elias-gill/yt_player/context"
+	appCtx "github.com/elias-gill/yt_player/context"
 	"github.com/elias-gill/yt_player/tui"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
-	model := tui.NewModel(context.NewContext())
+	model := tui.NewModel(appCtx.MustLoadContext())
 
 	if _, err := tea.NewProgram(
 		model,

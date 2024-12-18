@@ -1,19 +1,19 @@
 package context
 
 import (
-	// "github.com/elias-gill/yt_player/completition"
 	"github.com/elias-gill/yt_player/completition"
-	"github.com/elias-gill/yt_player/mpv"
+	"github.com/elias-gill/yt_player/player"
 	"github.com/elias-gill/yt_player/settings"
 )
 
 type Context struct {
-	Player    *mpv.MpvPlayer
+	Player    *player.Player
 	Config    *settings.Settings
 	History   *completition.Completition
 	CurrMode  Mode
 	WinHeight int
 	WinWidth  int
+	Error     error
 }
 
 type Mode int
@@ -24,10 +24,12 @@ const (
 	HELP
 )
 
-func NewContext() *Context {
+func MustLoadContext() *Context {
+	config := settings.MustParseConfig()
+
 	return &Context{
-		Config:   settings.MustParseConfig(),
-		Player:   mpv.MustInitPlayer(),
+		Config:   config,
+		Player:   player.MustCreatePlayer(config),
 		History:  completition.LoadHistory(),
 		CurrMode: SEARCH,
 	}

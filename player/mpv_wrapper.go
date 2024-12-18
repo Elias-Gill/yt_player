@@ -1,5 +1,5 @@
 // Wrapper functions for mpv player
-package mpv
+package player
 
 import (
 	"fmt"
@@ -13,14 +13,14 @@ import (
 
 const mpvSocket = "/tmp/mpvsocket"
 
-type MpvPlayer struct {
+type mpvInstance struct {
 	player *mpv.Client
 	cmd    *exec.Cmd
 }
 
 // Generates a new instance of the MpvPlayer cmd. Panics if MPV or youtube-dl executables cannot
 // be located in the path, or if the socket connection with MPV fails.
-func MustInitPlayer() *MpvPlayer {
+func startMpvInstance() *mpvInstance {
 	if !commandExists("mpv") {
 		fmt.Println("Cannot find mpv player")
 		os.Exit(1)
@@ -44,47 +44,47 @@ func MustInitPlayer() *MpvPlayer {
 	ipc := mpv.NewIPCClient("/tmp/mpvsocket")
 	player := mpv.NewClient(ipc)
 
-	return &MpvPlayer{
+	return &mpvInstance{
 		player: player,
 		cmd:    cmd,
 	}
 }
 
-func (m MpvPlayer) StopPlayer() {
+func (m mpvInstance) StopPlayer() {
 	m.cmd.Process.Kill()
 }
 
 // detach the player but stop idle mode, so the mpv process
 // would stop after the song is over
-func (m MpvPlayer) DetachPlayer() {
+func (m mpvInstance) DetachPlayer() {
 	m.player.SetProperty("idle", "no")
 }
 
-func (m MpvPlayer) ChangeSong(url string) {
+func (m mpvInstance) ChangeSong(url string) {
 	err := m.player.Loadfile(url, mpv.LoadFileModeReplace)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (m MpvPlayer) TogglePause() {
+func (m mpvInstance) TogglePause() {
 	p, _ := m.player.Pause()
 	m.player.SetPause(!p)
 }
 
-func (m MpvPlayer) PlusFiveSecs() {
+func (m mpvInstance) PlusFiveSecs() {
 	curTime, _ := m.player.GetFloatProperty("time-pos")
 	newTime := string(strconv.Itoa(int(curTime + 5)))
 	m.player.SetProperty("time-pos", newTime)
 }
 
-func (m MpvPlayer) LessFiveSecs() {
+func (m mpvInstance) LessFiveSecs() {
 	curTime, _ := m.player.GetFloatProperty("time-pos")
 	newTime := string(strconv.Itoa(int(curTime - 5)))
 	m.player.SetProperty("time-pos", newTime)
 }
 
-func (m MpvPlayer) GetSongStatus() string {
+func (m mpvInstance) GetSongStatus() string {
 	duration, _ := m.player.GetFloatProperty("duration")
 	curPos, _ := m.player.GetFloatProperty("time-pos")
 

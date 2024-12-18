@@ -36,3 +36,11 @@ func MustParseConfig() *Settings {
 		apiKey:     apiKey,
 	}
 }
+
+func (s Settings) GetApiKey() string {
+	return s.apiKey
+}
+
+func (s Settings) GetMaxResults() int64 {
+	return s.maxResults
+}

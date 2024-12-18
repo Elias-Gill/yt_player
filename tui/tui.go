@@ -2,6 +2,7 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/elias-gill/yt_player/context"
 	"github.com/elias-gill/yt_player/tui/components"
 )
@@ -19,7 +20,7 @@ func NewModel(ctx *context.Context) tea.Model {
 }
 
 func (t Tui) View() string {
-	return t.textInput.View()
+	return lipgloss.JoinHorizontal(0, t.textInput.View(), drawDivision(t.context.WinHeight))
 }
 
 func (t Tui) Init() tea.Cmd {
@@ -40,4 +41,13 @@ func (t Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	t.textInput, cmd = t.textInput.Update(msg)
 	return t, cmd
+}
+
+func drawDivision(h int) string {
+	var div string
+	for i := 0; i < h-1; i++ {
+		div += "│\n"
+	}
+
+	return div
 }
