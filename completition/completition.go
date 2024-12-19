@@ -100,7 +100,7 @@ func (c *Completition) PrevEntry() (string, error) {
 }
 
 // Tries to persist the current history. If the file cannot be accesed returns an error
-func (c Completition) PersistHistory() error {
+func (c Completition) persistHistory() error {
 	if c.historyFd == nil {
 		return fmt.Errorf("History File cannot be accesed")
 	}
@@ -114,4 +114,9 @@ func (c Completition) PersistHistory() error {
 	writer.Flush()
 
 	return nil
+}
+
+func (c Completition) Deinit() {
+	c.persistHistory()
+	c.historyFd.Close()
 }

@@ -61,6 +61,18 @@ func (p *Player) Search(searchKey string) error {
 	return p.callApi(call)
 }
 
+func (p *Player) GetVideoInfo(index int) (*youtube.VideoSnippet, error) {
+	videoCall := p.ytService.Videos.List([]string{"snippet", "contentDetails"}).
+		Id(p.Videos[index].Id).MaxResults(1)
+
+	videoResponse, err := videoCall.Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return videoResponse.Items[0].Snippet, nil
+}
+
 func (p *Player) NextPage() error {
 	// Make the API call to YouTube.
 	call := p.ytService.Search.List([]string{"id", "snippet"}).
@@ -77,6 +89,14 @@ func (p *Player) PrevPage() error {
 		MaxResults(p.settings.GetMaxResults())
 
 	return p.callApi(call)
+}
+
+func (p Player) Play(index int) {
+	p.mpvInstance.ChangeSong(p.Videos[index].Id)
+}
+
+func (p Player) Deinit() {
+	p.mpvInstance.StopPlayer()
 }
 
 func (p *Player) callApi(call *youtube.SearchListCall) error {
@@ -115,8 +135,4 @@ func (p *Player) callApi(call *youtube.SearchListCall) error {
 	p.Playlists = playlists
 
 	return nil
-}
-
-func (p Player) Play(url string) {
-	p.mpvInstance.ChangeSong(url)
 }

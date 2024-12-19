@@ -60,8 +60,8 @@ func (m mpvInstance) DetachPlayer() {
 	m.player.SetProperty("idle", "no")
 }
 
-func (m mpvInstance) ChangeSong(url string) {
-	err := m.player.Loadfile(url, mpv.LoadFileModeReplace)
+func (m mpvInstance) ChangeSong(id string) {
+	err := m.player.Loadfile(Yt_url+id, mpv.LoadFileModeReplace)
 	if err != nil {
 		panic(err)
 	}

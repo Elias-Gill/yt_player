@@ -27,6 +27,10 @@ func NewInput(ctx *context.Context) Input {
 }
 
 func (i Input) View() string {
+	if i.ctx.CurrMode != context.SEARCH {
+		i.textInput.Prompt = lipgloss.NewStyle().Foreground(lipgloss.Color(context.GruvboxGray)).Render(" Search> ")
+	}
+
 	return i.textInput.View()
 }
 

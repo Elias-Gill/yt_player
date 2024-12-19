@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	`os`
+	"os"
 
 	appCtx "github.com/elias-gill/yt_player/context"
 	"github.com/elias-gill/yt_player/tui"
@@ -11,7 +11,10 @@ import (
 )
 
 func main() {
-	model := tui.NewModel(appCtx.MustLoadContext())
+	ctx := appCtx.MustLoadContext()
+	defer ctx.Deinit()
+
+	model := tui.NewModel(ctx)
 
 	if _, err := tea.NewProgram(
 		model,

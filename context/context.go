@@ -22,8 +22,20 @@ type Mode int
 const (
 	SEARCH = iota
 	LIST
-	HELP
 )
+
+func (c *Context) NextMode() {
+	if c.CurrMode == LIST {
+		c.CurrMode = SEARCH
+	} else {
+		c.CurrMode++
+	}
+}
+
+func (c *Context) Deinit() {
+	c.Player.Deinit()
+	c.History.Deinit()
+}
 
 func MustLoadContext() *Context {
 	config := settings.MustParseConfig()

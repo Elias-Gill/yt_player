@@ -40,9 +40,14 @@ func (t Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if tea.KeyCtrlC == msg.Type {
+		switch msg.String() {
+		case tea.KeyCtrlC.String():
 			return t, tea.Quit
+		case tea.KeyTab.String():
+			t.context.NextMode()
+			return t, nil
 		}
+
 	case tea.WindowSizeMsg:
 		t.context.WinHeight = msg.Height
 		t.context.WinWidth = msg.Width

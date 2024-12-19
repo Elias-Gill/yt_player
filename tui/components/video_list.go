@@ -31,7 +31,6 @@ func (l List) Update(msg tea.Msg) (List, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "j":
-			print(len(l.context.Player.Videos))
 			if l.context.CurrItem+1 < len(l.context.Player.Videos) {
 				l.context.CurrItem++
 			}
@@ -40,11 +39,11 @@ func (l List) Update(msg tea.Msg) (List, tea.Cmd) {
 				l.context.CurrItem--
 			}
 
-		case "q", tea.KeyEsc.String():
-			print(len(l.context.Player.Videos))
+		case "q", "/", tea.KeyEsc.String():
 			l.context.CurrMode = context.SEARCH
+
 		case tea.KeyEnter.String():
-			l.context.Player.Play(l.context.Player.Videos[l.context.CurrItem].Id)
+			l.context.Player.Play(l.context.CurrItem)
 		}
 	}
 
@@ -53,14 +52,24 @@ func (l List) Update(msg tea.Msg) (List, tea.Cmd) {
 
 func (l List) View() string {
 	videos := l.context.Player.Videos
-	style := lipgloss.NewStyle().MaxWidth(l.width - 1).AlignHorizontal(lipgloss.Left)
+	style := lipgloss.NewStyle().
+		MaxWidth(l.width - 1).
+		AlignHorizontal(lipgloss.Left).
+		PaddingTop(1)
 
 	msg := ""
 	for i, video := range videos {
+		if i >= l.height {
+			break
+		}
 		line := fmt.Sprintf("%d\t%s", i, video.Title)
 
 		if i == l.context.CurrItem {
-			line = lipgloss.NewStyle().Foreground(lipgloss.Color(context.GruvboxOrange)).Render(line)
+			if l.context.CurrMode == context.LIST {
+				line = lipgloss.NewStyle().Foreground(lipgloss.Color(context.GruvboxOrange)).Render(line)
+			} else {
+				line = lipgloss.NewStyle().Foreground(lipgloss.Color(context.GruvboxGray)).Render(line)
+			}
 		}
 
 		msg += line + "\n"
