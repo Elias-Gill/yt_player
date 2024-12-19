@@ -22,13 +22,14 @@ func NewModel(ctx *context.Context) tea.Model {
 }
 
 func (t Tui) View() string {
-	return lipgloss.JoinHorizontal(
-		0,
-		lipgloss.JoinVertical(
-			0, t.textInput.View(),
-			t.list.View(),
-		),
-		drawDivision(t.context.WinHeight))
+	return t.context.Styles.GruvboxBg.
+		Width(t.context.WinWidth).
+		Height(t.context.WinHeight).
+		Render(
+			lipgloss.JoinVertical(
+				0, t.textInput.View(),
+				t.list.View(),
+			))
 }
 
 func (t Tui) Init() tea.Cmd {

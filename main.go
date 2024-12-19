@@ -16,9 +16,7 @@ func main() {
 
 	model := tui.NewModel(ctx)
 
-	if _, err := tea.NewProgram(
-		model,
-		tea.WithAltScreen()).Run(); err != nil {
+	if _, err := tea.NewProgram(model, tea.WithAltScreen()).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}

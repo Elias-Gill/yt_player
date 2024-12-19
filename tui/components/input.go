@@ -4,7 +4,6 @@ import (
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/elias-gill/yt_player/context"
 )
 
@@ -17,7 +16,7 @@ type Input struct {
 
 func NewInput(ctx *context.Context) Input {
 	ti := textinput.New()
-	ti.Prompt = lipgloss.NewStyle().Foreground(lipgloss.Color(context.GruvboxAqua)).Render(" Search> ")
+	ti.Prompt = ctx.Styles.GruvboxAqua.Render(" Search> ")
 	ti.Focus()
 
 	return Input{
@@ -28,7 +27,7 @@ func NewInput(ctx *context.Context) Input {
 
 func (i Input) View() string {
 	if i.ctx.CurrMode != context.SEARCH {
-		i.textInput.Prompt = lipgloss.NewStyle().Foreground(lipgloss.Color(context.GruvboxGray)).Render(" Search> ")
+		i.textInput.Prompt = i.ctx.Styles.GruvboxGray.Render(" Search> ")
 	}
 
 	return i.textInput.View()

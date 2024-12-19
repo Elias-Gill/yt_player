@@ -25,7 +25,7 @@ func NewList(ctx *context.Context) List {
 func (l List) Update(msg tea.Msg) (List, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		l.width = int(float32(msg.Width) * 0.6)
+		l.width = msg.Width
 		l.height = msg.Height
 
 	case tea.KeyMsg:
@@ -57,18 +57,22 @@ func (l List) View() string {
 		AlignHorizontal(lipgloss.Left).
 		PaddingTop(1)
 
+	if len(videos) == 0 {
+		return style.Render(l.context.Styles.GruvboxGray.Render("No Available Videos ..."))
+	}
+
 	msg := ""
 	for i, video := range videos {
-		if i >= l.height {
+		if i >= l.height-1 {
 			break
 		}
-		line := fmt.Sprintf("%d\t%s", i, video.Title)
 
+		line := fmt.Sprintf("%d\t%s", i, video.Title)
 		if i == l.context.CurrItem {
 			if l.context.CurrMode == context.LIST {
-				line = lipgloss.NewStyle().Foreground(lipgloss.Color(context.GruvboxOrange)).Render(line)
+				line = l.context.Styles.GruvboxOrange.Render(line)
 			} else {
-				line = lipgloss.NewStyle().Foreground(lipgloss.Color(context.GruvboxGray)).Render(line)
+				line = l.context.Styles.GruvboxGray.Render(line)
 			}
 		}
 
