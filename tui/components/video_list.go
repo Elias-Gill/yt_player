@@ -1,34 +1,74 @@
 package components
 
 import (
-	"github.com/charmbracelet/bubbles/textinput"
+	"fmt"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/elias-gill/yt_player/context"
 )
 
-type VideoList struct {
-	ctx *context.Context
+type List struct {
+	context *context.Context
+	width   int
+	height  int
 }
 
-func NewVideoList(ctx *context.Context) VideoList {
-	ti := textinput.New()
-	ti.Prompt = lipgloss.NewStyle().Foreground(lipgloss.Color(context.GruvboxAqua)).Render(" Search> ")
-	ti.Focus()
-
-	return VideoList{
-		ctx: ctx,
+func NewList(ctx *context.Context) List {
+	return List{
+		context: ctx,
+		width:   30,
+		height:  30,
 	}
 }
 
-func (v VideoList) View() string {
-	return ""
+func (l List) Update(msg tea.Msg) (List, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		l.width = int(float32(msg.Width) * 0.6)
+		l.height = msg.Height
+
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "j":
+			print(len(l.context.Player.Videos))
+			if l.context.CurrItem+1 < len(l.context.Player.Videos) {
+				l.context.CurrItem++
+			}
+		case "k":
+			if l.context.CurrItem > 0 {
+				l.context.CurrItem--
+			}
+
+		case "q", tea.KeyEsc.String():
+			print(len(l.context.Player.Videos))
+			l.context.CurrMode = context.SEARCH
+		case tea.KeyEnter.String():
+			l.context.Player.Play(l.context.Player.Videos[l.context.CurrItem].Id)
+		}
+	}
+
+	return l, nil
 }
 
-func (v VideoList) Init() tea.Cmd {
+func (l List) View() string {
+	videos := l.context.Player.Videos
+	style := lipgloss.NewStyle().MaxWidth(l.width - 1).AlignHorizontal(lipgloss.Left)
+
+	msg := ""
+	for i, video := range videos {
+		line := fmt.Sprintf("%d\t%s", i, video.Title)
+
+		if i == l.context.CurrItem {
+			line = lipgloss.NewStyle().Foreground(lipgloss.Color(context.GruvboxOrange)).Render(line)
+		}
+
+		msg += line + "\n"
+	}
+
+	return style.Render(msg)
+}
+
+func (l List) Init() tea.Cmd {
 	return nil
-}
-
-func (v VideoList) Update(msg tea.Msg) (VideoList, tea.Cmd) {
-	return v, nil
 }

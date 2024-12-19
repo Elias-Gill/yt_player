@@ -34,14 +34,21 @@ func (i Input) Init() tea.Cmd {
 	return nil
 }
 
-func (in Input) Update(msg tea.Msg) (Input, tea.Cmd) {
+func (i Input) Update(msg tea.Msg) (Input, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		in.textInput.Width = int(float32(msg.Width-len(in.textInput.Prompt)) * 0.7)
+		i.textInput.Width = int(float32(msg.Width-len(i.textInput.Prompt)) * 0.7)
+	case tea.KeyMsg:
+		if msg.Type == tea.KeyEnter {
+			i.ctx.CurrMode = context.LIST
+			i.ctx.Player.Search(i.textInput.Value())
+
+			return i, nil
+		}
 	}
 
 	var cmd tea.Cmd
-	in.textInput, cmd = in.textInput.Update(msg)
+	i.textInput, cmd = i.textInput.Update(msg)
 
-	return in, cmd
+	return i, cmd
 }

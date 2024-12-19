@@ -19,6 +19,9 @@ type Player struct {
 
 	Playlists []Playlist
 	Videos    []Video
+
+	nextPageToken string
+	prevPageToken string
 }
 
 type Playlist struct {
@@ -55,11 +58,35 @@ func (p *Player) Search(searchKey string) error {
 		Q(searchKey).
 		MaxResults(p.settings.GetMaxResults())
 
-	response, err := call.Do()
+	return p.callApi(call)
+}
 
+func (p *Player) NextPage() error {
+	// Make the API call to YouTube.
+	call := p.ytService.Search.List([]string{"id", "snippet"}).
+		PageToken(p.nextPageToken).
+		MaxResults(p.settings.GetMaxResults())
+
+	return p.callApi(call)
+}
+
+func (p *Player) PrevPage() error {
+	// Make the API call to YouTube.
+	call := p.ytService.Search.List([]string{"id", "snippet"}).
+		PageToken(p.prevPageToken).
+		MaxResults(p.settings.GetMaxResults())
+
+	return p.callApi(call)
+}
+
+func (p *Player) callApi(call *youtube.SearchListCall) error {
+	response, err := call.Do()
 	if err != nil {
 		return err
 	}
+
+	p.nextPageToken = response.NextPageToken
+	p.prevPageToken = response.PrevPageToken
 
 	// Group video, channel, and playlist results in separate lists.
 	videos := []Video{}
@@ -88,4 +115,8 @@ func (p *Player) Search(searchKey string) error {
 	p.Playlists = playlists
 
 	return nil
+}
+
+func (p Player) Play(url string) {
+	p.mpvInstance.ChangeSong(url)
 }

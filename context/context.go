@@ -11,6 +11,7 @@ type Context struct {
 	Config    *settings.Settings
 	History   *completition.Completition
 	CurrMode  Mode
+	CurrItem  int
 	WinHeight int
 	WinWidth  int
 	Error     error
@@ -32,5 +33,6 @@ func MustLoadContext() *Context {
 		Player:   player.MustCreatePlayer(config),
 		History:  completition.LoadHistory(),
 		CurrMode: SEARCH,
+		CurrItem: 0,
 	}
 }
