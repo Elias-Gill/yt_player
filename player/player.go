@@ -95,6 +95,10 @@ func (p Player) Play(index int) {
 	p.mpvInstance.ChangeSong(p.Videos[index].Id)
 }
 
+func (p Player) GetStatus() (float64, float64) {
+	return p.mpvInstance.GetSongStatus()
+}
+
 func (p Player) Deinit() {
 	p.mpvInstance.StopPlayer()
 }

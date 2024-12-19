@@ -84,11 +84,12 @@ func (m mpvInstance) LessFiveSecs() {
 	m.player.SetProperty("time-pos", newTime)
 }
 
-func (m mpvInstance) GetSongStatus() string {
+// Returns de lenght of the current position and the length of the song (position, length)
+func (m mpvInstance) GetSongStatus() (float64, float64) {
 	duration, _ := m.player.GetFloatProperty("duration")
 	curPos, _ := m.player.GetFloatProperty("time-pos")
 
-	return time.Duration(curPos*1e9).String() + " / " + time.Duration(duration*1e9).String()
+	return curPos * 1e9, duration * 1e9
 }
 
 func commandExists(cmd string) bool {

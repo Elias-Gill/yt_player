@@ -8,16 +8,18 @@ import (
 )
 
 type Tui struct {
-	context   *context.Context
-	textInput components.Input
-	list      components.List
+	context    *context.Context
+	textInput  components.Input
+	list       components.VideoList
+	playerInfo components.PlayerProgress
 }
 
 func NewModel(ctx *context.Context) tea.Model {
 	return Tui{
-		context:   ctx,
-		textInput: components.NewInput(ctx),
-		list:      components.NewList(ctx),
+		context:    ctx,
+		textInput:  components.NewInput(ctx),
+		list:       components.NewList(ctx),
+		playerInfo: components.NewPlayerInfo(ctx),
 	}
 }
 
@@ -27,13 +29,15 @@ func (t Tui) View() string {
 		Height(t.context.WinHeight).
 		Render(
 			lipgloss.JoinVertical(
-				0, t.textInput.View(),
+				lipgloss.Top,
+				t.textInput.View(),
 				t.list.View(),
+				lipgloss.NewStyle().Align(lipgloss.Bottom).Render(t.playerInfo.View()),
 			))
 }
 
 func (t Tui) Init() tea.Cmd {
-	return nil
+	return t.playerInfo.Init()
 }
 
 func (t Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -59,11 +63,13 @@ func (t Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return t, nil
 	}
 
+	t.playerInfo, cmd = t.playerInfo.Update(msg)
+
 	switch t.context.CurrMode {
 	case context.LIST:
-		t.list, cmd = t.list.Update(msg)
+		t.list, _ = t.list.Update(msg)
 	case context.SEARCH:
-		t.textInput, cmd = t.textInput.Update(msg)
+		t.textInput, _ = t.textInput.Update(msg)
 	}
 
 	return t, cmd

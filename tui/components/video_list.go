@@ -8,21 +8,21 @@ import (
 	"github.com/elias-gill/yt_player/context"
 )
 
-type List struct {
+type VideoList struct {
 	context *context.Context
 	width   int
 	height  int
 }
 
-func NewList(ctx *context.Context) List {
-	return List{
+func NewList(ctx *context.Context) VideoList {
+	return VideoList{
 		context: ctx,
 		width:   30,
 		height:  30,
 	}
 }
 
-func (l List) Update(msg tea.Msg) (List, tea.Cmd) {
+func (l VideoList) Update(msg tea.Msg) (VideoList, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		l.width = msg.Width
@@ -43,19 +43,22 @@ func (l List) Update(msg tea.Msg) (List, tea.Cmd) {
 			l.context.CurrMode = context.SEARCH
 
 		case tea.KeyEnter.String():
-			l.context.Player.Play(l.context.CurrItem)
+			if l.context.CurrItem < len(l.context.Player.Videos) {
+				l.context.Player.Play(l.context.CurrItem)
+			}
 		}
 	}
 
 	return l, nil
 }
 
-func (l List) View() string {
+func (l VideoList) View() string {
 	videos := l.context.Player.Videos
 	style := lipgloss.NewStyle().
 		MaxWidth(l.width - 1).
 		AlignHorizontal(lipgloss.Left).
-		PaddingTop(1)
+		PaddingTop(1).
+		PaddingBottom(1)
 
 	if len(videos) == 0 {
 		return style.Render(l.context.Styles.GruvboxGray.Render("No Available Videos ..."))
@@ -82,6 +85,6 @@ func (l List) View() string {
 	return style.Render(msg)
 }
 
-func (l List) Init() tea.Cmd {
+func (l VideoList) Init() tea.Cmd {
 	return nil
 }
