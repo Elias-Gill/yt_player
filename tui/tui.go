@@ -59,6 +59,7 @@ func (t Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		t.list, _ = t.list.Update(msg)
 		t.textInput, _ = t.textInput.Update(msg)
+		t.playerInfo, _ = t.playerInfo.Update(msg)
 
 		return t, nil
 	}

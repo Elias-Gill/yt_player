@@ -35,8 +35,7 @@ type Video struct {
 }
 
 func MustCreatePlayer(settings *settings.Settings) *Player {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
+	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
 	service, err := youtube.NewService(
 		ctx, option.WithAPIKey(settings.GetApiKey()),
 	)

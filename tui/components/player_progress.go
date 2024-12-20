@@ -21,6 +21,7 @@ type PlayerProgress struct {
 func NewPlayerInfo(ctx *context.Context) PlayerProgress {
 	prg := progress.New()
 	prg.ShowPercentage = false
+	prg.Width = 80
 
 	return PlayerProgress{
 		ctx:      ctx,
@@ -32,7 +33,7 @@ func NewPlayerInfo(ctx *context.Context) PlayerProgress {
 func (p PlayerProgress) Update(msg tea.Msg) (PlayerProgress, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		p.progress.Width = msg.Width
+		p.progress.Width = msg.Width-2
 		return p, nil
 
 	case tickMsg:

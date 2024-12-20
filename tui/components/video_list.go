@@ -56,6 +56,8 @@ func (l VideoList) View() string {
 	videos := l.context.Player.Videos
 	style := lipgloss.NewStyle().
 		MaxWidth(l.width - 1).
+		Width(l.width - 1).
+		Height(l.height - 4).
 		AlignHorizontal(lipgloss.Left).
 		PaddingTop(1).
 		PaddingBottom(1)

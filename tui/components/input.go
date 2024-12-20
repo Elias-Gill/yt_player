@@ -40,7 +40,7 @@ func (i Input) Init() tea.Cmd {
 func (i Input) Update(msg tea.Msg) (Input, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		i.textInput.Width = int(float32(msg.Width-len(i.textInput.Prompt)) * 0.7)
+		i.textInput.Width = msg.Width - len(i.textInput.Prompt)
 	case tea.KeyMsg:
 		if msg.Type == tea.KeyEnter {
 			i.ctx.CurrMode = context.LIST
