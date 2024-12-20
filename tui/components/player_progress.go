@@ -33,7 +33,7 @@ func NewPlayerInfo(ctx *context.Context) PlayerProgress {
 func (p PlayerProgress) Update(msg tea.Msg) (PlayerProgress, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		p.progress.Width = msg.Width-2
+		p.progress.Width = msg.Width - 2
 		return p, nil
 
 	case tickMsg:
@@ -49,9 +49,20 @@ func (p PlayerProgress) View() string {
 	currPos, duration := p.ctx.Player.GetStatus()
 	currPosDuration := time.Duration(currPos) * time.Second
 	durationDuration := time.Duration(duration) * time.Second
-	playerTime := fmt.Sprintf("%s / %s", currPosDuration.String(), durationDuration.String())
 
-	return lipgloss.JoinVertical(0, p.progress.ViewAs(p.percent), playerTime)
+	hPrompt := "Help: '?'"
+	help := p.ctx.Styles.GruvboxGray.Inherit(p.ctx.Styles.GruvboxBg).Render(hPrompt)
+	playerTime :=
+		p.ctx.Styles.GruvboxBlue.
+			Inherit(p.ctx.Styles.GruvboxBg).
+			Width(p.ctx.WinWidth - len(hPrompt) - 2).
+			Render(fmt.Sprintf("%s / %s", currPosDuration.String(), durationDuration.String()))
+
+	return lipgloss.JoinVertical(
+		0,
+		p.progress.ViewAs(p.percent),
+		lipgloss.JoinHorizontal(0, playerTime, help),
+	)
 }
 
 func (p PlayerProgress) Init() tea.Cmd {
