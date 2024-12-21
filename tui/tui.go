@@ -25,14 +25,20 @@ func NewModel(ctx *context.Context) tea.Model {
 
 func (t Tui) View() string {
 	return t.context.Styles.Background.
+		MaxWidth(t.context.WinWidth).
 		Width(t.context.WinWidth).
 		Height(t.context.WinHeight).
+		MaxHeight(t.context.WinHeight).
 		Render(
 			lipgloss.JoinVertical(
-				lipgloss.Top,
+				0,
 				t.textInput.View(),
-				t.list.View(),
-				lipgloss.NewStyle().Align(lipgloss.Bottom).Render(t.playerInfo.View()),
+				t.context.Styles.Background.
+					Height(t.context.WinHeight-5).
+					Width(t.context.WinWidth).
+					PaddingTop(1).
+					Render(t.list.View()),
+				t.playerInfo.View(),
 			))
 }
 
@@ -48,9 +54,18 @@ func (t Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case tea.KeyCtrlC.String():
 			return t, tea.Quit
+
 		case tea.KeyTab.String():
 			t.context.NextMode()
 			return t, nil
+
+		default:
+			switch t.context.CurrMode {
+			case context.LIST:
+				t.list, _ = t.list.Update(msg)
+			case context.SEARCH:
+				t.textInput, _ = t.textInput.Update(msg)
+			}
 		}
 
 	case tea.WindowSizeMsg:
@@ -62,15 +77,9 @@ func (t Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		t.playerInfo, _ = t.playerInfo.Update(msg)
 
 		return t, nil
-	}
 
-	t.playerInfo, cmd = t.playerInfo.Update(msg)
-
-	switch t.context.CurrMode {
-	case context.LIST:
-		t.list, _ = t.list.Update(msg)
-	case context.SEARCH:
-		t.textInput, _ = t.textInput.Update(msg)
+	default:
+		t.playerInfo, cmd = t.playerInfo.Update(msg)
 	}
 
 	return t, cmd

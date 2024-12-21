@@ -6,7 +6,6 @@ import (
 
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/elias-gill/yt_player/context"
 )
 
@@ -16,6 +15,9 @@ type PlayerProgress struct {
 	ctx      *context.Context
 	percent  float64
 	progress progress.Model
+
+	songDuration string
+	currPosition string
 }
 
 func NewPlayerInfo(ctx *context.Context) PlayerProgress {
@@ -27,18 +29,25 @@ func NewPlayerInfo(ctx *context.Context) PlayerProgress {
 		ctx:      ctx,
 		progress: prg,
 		percent:  0,
+
+		currPosition: "0s",
+		songDuration: "0s",
 	}
 }
 
 func (p PlayerProgress) Update(msg tea.Msg) (PlayerProgress, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		p.progress.Width = msg.Width - 2
+		p.progress.Width = msg.Width - 2 // minus padding
 		return p, nil
 
 	case tickMsg:
 		currPos, duration := p.ctx.Player.GetStatus()
+
 		p.percent = currPos / duration
+		p.currPosition = time.Duration(currPos).String()
+		p.songDuration = time.Duration(duration).String()
+
 		return p, tickCmd()
 	}
 
@@ -46,26 +55,19 @@ func (p PlayerProgress) Update(msg tea.Msg) (PlayerProgress, tea.Cmd) {
 }
 
 func (p PlayerProgress) View() string {
-	currPos, duration := p.ctx.Player.GetStatus()
-	currPosDuration := time.Duration(currPos).String()
-	durationDuration := time.Duration(duration).String()
-
 	hPrompt := "Help: '?'"
 	help := p.ctx.Styles.ForegroundGray.Inherit(p.ctx.Styles.Background).Render(hPrompt)
 
 	playerTime := p.ctx.Styles.ForegroundAqua.
-		Inherit(p.ctx.Styles.Background).
 		Width(p.ctx.WinWidth - len(hPrompt) - 2).
 		Render(fmt.Sprintf("%s / %s  %s",
-			currPosDuration,
-			durationDuration,
+			p.currPosition,
+			p.songDuration,
 			p.ctx.Player.GetCurrentSong()))
 
-	return lipgloss.JoinVertical(
-		0,
+	return fmt.Sprintf("%s\n%s",
 		p.progress.ViewAs(p.percent),
-		lipgloss.JoinHorizontal(0, playerTime, help),
-	)
+		playerTime+help)
 }
 
 func (p PlayerProgress) Init() tea.Cmd {

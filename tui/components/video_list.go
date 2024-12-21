@@ -2,9 +2,9 @@ package components
 
 import (
 	"fmt"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/elias-gill/yt_player/context"
 )
 
@@ -54,37 +54,34 @@ func (l VideoList) Update(msg tea.Msg) (VideoList, tea.Cmd) {
 
 func (l VideoList) View() string {
 	videos := l.context.Player.Videos
-	style := lipgloss.NewStyle().
-		MaxWidth(l.width - 1).
-		Width(l.width - 1).
-		Height(l.height - 4).
-		AlignHorizontal(lipgloss.Left).
-		PaddingTop(1).
-		PaddingBottom(1)
-
 	if len(videos) == 0 {
-		return style.Render(l.context.Styles.ForegroundGray.Render("No Available Videos ..."))
+		return l.context.Styles.ForegroundGray.Render("No Available Videos ...")
 	}
 
-	msg := ""
+	var msg strings.Builder
+	msg.Grow(len(videos) * 30) // Preallocate memory
+
 	for i, video := range videos {
 		if i >= l.height-1 {
 			break
 		}
 
-		line := fmt.Sprintf("%d\t%s", i, video.Title)
+		// Prepare the line to write
+		var line string
 		if i == l.context.CurrItem {
 			if l.context.CurrMode == context.LIST {
-				line = l.context.Styles.ForegroundRed.Render(line)
+				line = l.context.Styles.ForegroundRed.Render(fmt.Sprintf("%d\t%s", i+1, video.Title))
 			} else {
-				line = l.context.Styles.ForegroundGray.Render(line)
+				line = l.context.Styles.ForegroundGray.Render(fmt.Sprintf("%d\t%s", i+1, video.Title))
 			}
+		} else {
+			line = fmt.Sprintf("%d\t%s", i+1, video.Title)
 		}
 
-		msg += line + "\n"
+		msg.WriteString(line + "\n")
 	}
 
-	return style.Render(msg)
+	return msg.String()
 }
 
 func (l VideoList) Init() tea.Cmd {
