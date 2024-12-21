@@ -14,9 +14,11 @@ type Input struct {
 	prompt    string
 }
 
+const prompt = " Search> "
+
 func NewInput(ctx *context.Context) Input {
 	ti := textinput.New()
-	ti.Prompt = ctx.Styles.GruvboxAqua.Render(" Search> ")
+	ti.Prompt = ctx.Styles.BackgroundRed.Render(prompt) + " "
 	ti.Focus()
 
 	return Input{
@@ -27,7 +29,7 @@ func NewInput(ctx *context.Context) Input {
 
 func (i Input) View() string {
 	if i.ctx.CurrMode != context.SEARCH {
-		i.textInput.Prompt = i.ctx.Styles.GruvboxGray.Render(" Search> ")
+		i.textInput.Prompt = i.ctx.Styles.BackgroundGray.Render(prompt) + " "
 	}
 
 	return i.textInput.View()

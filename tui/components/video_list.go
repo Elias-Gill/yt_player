@@ -63,7 +63,7 @@ func (l VideoList) View() string {
 		PaddingBottom(1)
 
 	if len(videos) == 0 {
-		return style.Render(l.context.Styles.GruvboxGray.Render("No Available Videos ..."))
+		return style.Render(l.context.Styles.ForegroundGray.Render("No Available Videos ..."))
 	}
 
 	msg := ""
@@ -75,9 +75,9 @@ func (l VideoList) View() string {
 		line := fmt.Sprintf("%d\t%s", i, video.Title)
 		if i == l.context.CurrItem {
 			if l.context.CurrMode == context.LIST {
-				line = l.context.Styles.GruvboxOrange.Render(line)
+				line = l.context.Styles.ForegroundRed.Render(line)
 			} else {
-				line = l.context.Styles.GruvboxGray.Render(line)
+				line = l.context.Styles.ForegroundGray.Render(line)
 			}
 		}
 

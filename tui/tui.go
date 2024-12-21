@@ -24,7 +24,7 @@ func NewModel(ctx *context.Context) tea.Model {
 }
 
 func (t Tui) View() string {
-	return t.context.Styles.GruvboxBg.
+	return t.context.Styles.Background.
 		Width(t.context.WinWidth).
 		Height(t.context.WinHeight).
 		Render(

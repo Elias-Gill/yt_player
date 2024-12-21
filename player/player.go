@@ -19,6 +19,7 @@ type Player struct {
 
 	Playlists []Playlist
 	Videos    []Video
+	currSong  string
 
 	nextPageToken string
 	prevPageToken string
@@ -90,12 +91,21 @@ func (p *Player) PrevPage() error {
 	return p.callApi(call)
 }
 
-func (p Player) Play(index int) {
+func (p *Player) Play(index int) {
+	if index > len(p.Videos)-1 || len(p.Videos) == 0 || index < 0 {
+		return
+	}
+
 	p.mpvInstance.ChangeSong(p.Videos[index].Id)
+	p.currSong = p.Videos[index].Title
 }
 
 func (p Player) GetStatus() (float64, float64) {
 	return p.mpvInstance.GetSongStatus()
+}
+
+func (p Player) GetCurrentSong() string {
+	return p.currSong
 }
 
 func (p Player) Deinit() {

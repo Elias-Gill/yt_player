@@ -15,16 +15,16 @@ const (
 )
 
 type styles struct {
-	GruvboxBg     lipgloss.Style
-	GruvboxRed    lipgloss.Style
-	GruvboxGreen  lipgloss.Style
-	GruvboxYellow lipgloss.Style
-	GruvboxBlue   lipgloss.Style
-	GruvboxPurple lipgloss.Style
-	GruvboxAqua   lipgloss.Style
-	GruvboxOrange lipgloss.Style
-	GruvboxGray   lipgloss.Style
-	GruvboxBlack  lipgloss.Style
+	// Global Colors
+	Background lipgloss.Style
+
+	// Foreground focus Colors
+	ForegroundRed  lipgloss.Style
+	ForegroundAqua lipgloss.Style
+	ForegroundGray lipgloss.Style
+
+	BackgroundRed  lipgloss.Style
+	BackgroundGray lipgloss.Style
 }
 
 type Context struct {
@@ -66,16 +66,18 @@ func MustLoadContext() *Context {
 		CurrItem: 0,
 
 		Styles: styles{
-			GruvboxBg:     lipgloss.NewStyle().Background(lipgloss.Color("#1d2021")).Padding(1), // Background
-			GruvboxRed:    lipgloss.NewStyle().Foreground(lipgloss.Color("#fb4934")),            // Red
-			GruvboxGreen:  lipgloss.NewStyle().Foreground(lipgloss.Color("#b8bb26")),            // Green
-			GruvboxYellow: lipgloss.NewStyle().Foreground(lipgloss.Color("#fabd2f")),            // Yellow
-			GruvboxBlue:   lipgloss.NewStyle().Foreground(lipgloss.Color("#83a598")),            // Blue
-			GruvboxPurple: lipgloss.NewStyle().Foreground(lipgloss.Color("#d3869b")),            // Purple
-			GruvboxAqua:   lipgloss.NewStyle().Foreground(lipgloss.Color("#8ec07c")),            // Aqua
-			GruvboxOrange: lipgloss.NewStyle().Foreground(lipgloss.Color("#fe8019")),            // Orange
-			GruvboxGray:   lipgloss.NewStyle().Foreground(lipgloss.Color("#928374")),            // Gray
-			GruvboxBlack:  lipgloss.NewStyle().Foreground(lipgloss.Color("#282828")),            // Black
+			Background: lipgloss.NewStyle().
+				Background(lipgloss.Color("#1d2021")).
+				Padding(1),
+			BackgroundRed: lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#282828")).
+				Background(lipgloss.Color("#f96c5b")),
+			BackgroundGray: lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#282828")).
+				Background(lipgloss.Color("#928374")),
+			ForegroundRed:  lipgloss.NewStyle().Foreground(lipgloss.Color("#f96c5b")),
+			ForegroundAqua: lipgloss.NewStyle().Foreground(lipgloss.Color("#8ec07c")),
+			ForegroundGray: lipgloss.NewStyle().Foreground(lipgloss.Color("#928374")),
 		},
 	}
 }

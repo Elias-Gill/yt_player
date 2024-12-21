@@ -47,16 +47,19 @@ func (p PlayerProgress) Update(msg tea.Msg) (PlayerProgress, tea.Cmd) {
 
 func (p PlayerProgress) View() string {
 	currPos, duration := p.ctx.Player.GetStatus()
-	currPosDuration := time.Duration(currPos) * time.Second
-	durationDuration := time.Duration(duration) * time.Second
+	currPosDuration := time.Duration(currPos).String()
+	durationDuration := time.Duration(duration).String()
 
 	hPrompt := "Help: '?'"
-	help := p.ctx.Styles.GruvboxGray.Inherit(p.ctx.Styles.GruvboxBg).Render(hPrompt)
-	playerTime :=
-		p.ctx.Styles.GruvboxBlue.
-			Inherit(p.ctx.Styles.GruvboxBg).
-			Width(p.ctx.WinWidth - len(hPrompt) - 2).
-			Render(fmt.Sprintf("%s / %s", currPosDuration.String(), durationDuration.String()))
+	help := p.ctx.Styles.ForegroundGray.Inherit(p.ctx.Styles.Background).Render(hPrompt)
+
+	playerTime := p.ctx.Styles.ForegroundAqua.
+		Inherit(p.ctx.Styles.Background).
+		Width(p.ctx.WinWidth - len(hPrompt) - 2).
+		Render(fmt.Sprintf("%s / %s  %s",
+			currPosDuration,
+			durationDuration,
+			p.ctx.Player.GetCurrentSong()))
 
 	return lipgloss.JoinVertical(
 		0,
