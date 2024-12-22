@@ -74,12 +74,14 @@ func MustLoadContext() *Context {
 				Foreground(lipgloss.Color("#282828")).
 				Background(lipgloss.Color("#928374")),
 			ForegroundRed: lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#f96c5b")),
+				Foreground(lipgloss.Color("#f96c5b")).
+				Background(lipgloss.Color("#1d2021")),
 			ForegroundAqua: lipgloss.NewStyle().
 				Foreground(lipgloss.Color("#8ec07c")).
 				Background(lipgloss.Color("#1d2021")),
 			ForegroundGray: lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#928374")),
+				Foreground(lipgloss.Color("#928374")).
+				Background(lipgloss.Color("#1d2021")),
 		},
 	}
 }

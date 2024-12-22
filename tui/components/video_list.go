@@ -34,8 +34,8 @@ func NewList(ctx *context.Context) VideoList {
 func (l VideoList) Update(msg tea.Msg) (VideoList, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		l.width = msg.Width - 8
-		l.height = msg.Height - 8
+		l.width = msg.Width
+		l.height = msg.Height - 9
 
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -97,17 +97,21 @@ func (l VideoList) View() string {
 			break
 		}
 		video := videos[i]
+		title := video.Title
+		if len(title) > l.context.WinWidth-7 {
+			title = title[0 : l.context.WinWidth-8]
+		}
 
 		// Prepare the line to write
 		var line string
 		if i == l.currItem {
 			if l.context.CurrMode == context.LIST {
-				line = l.context.Styles.ForegroundRed.Render(fmt.Sprintf("%d\t%s", i+1, video.Title))
+				line = l.context.Styles.ForegroundRed.Render(fmt.Sprintf("%d  %s", i+1, title))
 			} else {
-				line = l.context.Styles.ForegroundGray.Render(fmt.Sprintf("%d\t%s", i+1, video.Title))
+				line = l.context.Styles.ForegroundGray.Render(fmt.Sprintf("%d  %s", i+1, title))
 			}
 		} else {
-			line = fmt.Sprintf("%d\t%s", i+1, video.Title)
+			line = fmt.Sprintf("%d  %s", i+1, title)
 		}
 
 		msg.WriteString(line + "\n")
@@ -122,7 +126,9 @@ func (l VideoList) View() string {
 			line = l.context.Styles.ForegroundGray.Render(fmt.Sprintf("%d", i+1))
 		}
 
-		msg.WriteString(line + "  ")
+		line += l.context.Styles.ForegroundGray.Render("  ")
+		msg.WriteString(line)
+
 	}
 
 	return msg.String()
