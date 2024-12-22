@@ -8,13 +8,11 @@ import (
 
 type Settings struct {
 	// flags
-	maxResults int64
-	apiKey     string
+	apiKey string
 }
 
 func MustParseConfig() *Settings {
 	keyFlag := *flag.String("key", "", "Youtube developer key")
-	maxResults := *flag.Int64("max-results", 20, "Max YouTube results")
 	flag.Parse()
 
 	var apiKey string
@@ -32,15 +30,10 @@ func MustParseConfig() *Settings {
 	}
 
 	return &Settings{
-		maxResults: maxResults,
-		apiKey:     apiKey,
+		apiKey: apiKey,
 	}
 }
 
 func (s Settings) GetApiKey() string {
 	return s.apiKey
-}
-
-func (s Settings) GetMaxResults() int64 {
-	return s.maxResults
 }

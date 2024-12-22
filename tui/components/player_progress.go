@@ -58,7 +58,12 @@ func (p PlayerProgress) View() string {
 	hPrompt := "Help: '?'"
 	help := p.ctx.Styles.ForegroundGray.Inherit(p.ctx.Styles.Background).Render(hPrompt)
 
-	playerTime := p.ctx.Styles.ForegroundAqua.
+	style := p.ctx.Styles.ForegroundAqua
+	if p.ctx.Player.IsPaused() {
+		style = p.ctx.Styles.ForegroundGray
+	}
+
+	playerTime := style.
 		Width(p.ctx.WinWidth - len(hPrompt) - 2).
 		Render(fmt.Sprintf("%s / %s  %s",
 			p.currPosition,

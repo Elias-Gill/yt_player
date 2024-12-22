@@ -36,7 +36,6 @@ type Context struct {
 
 	// App Status
 	CurrMode  Mode
-	CurrItem  int
 	WinHeight int
 	WinWidth  int
 	Error     error
@@ -63,7 +62,6 @@ func MustLoadContext() *Context {
 		Player:   player.MustCreatePlayer(config),
 		History:  completition.LoadHistory(),
 		CurrMode: SEARCH,
-		CurrItem: 0,
 
 		Styles: styles{
 			Background: lipgloss.NewStyle().

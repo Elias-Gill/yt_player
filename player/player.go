@@ -10,7 +10,10 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
-const Yt_url = "https://www.youtube.com/watch?v="
+const (
+	maxResults = 80
+	Yt_url     = "https://www.youtube.com/watch?v="
+)
 
 type Player struct {
 	settings    *settings.Settings
@@ -56,7 +59,7 @@ func (p *Player) Search(searchKey string) error {
 	// Make the API call to YouTube.
 	call := p.ytService.Search.List([]string{"id", "snippet"}).
 		Q(searchKey).
-		MaxResults(p.settings.GetMaxResults())
+		MaxResults(maxResults)
 
 	return p.callApi(call)
 }
@@ -77,7 +80,7 @@ func (p *Player) NextPage() error {
 	// Make the API call to YouTube.
 	call := p.ytService.Search.List([]string{"id", "snippet"}).
 		PageToken(p.nextPageToken).
-		MaxResults(p.settings.GetMaxResults())
+		MaxResults(maxResults)
 
 	return p.callApi(call)
 }
@@ -86,7 +89,7 @@ func (p *Player) PrevPage() error {
 	// Make the API call to YouTube.
 	call := p.ytService.Search.List([]string{"id", "snippet"}).
 		PageToken(p.prevPageToken).
-		MaxResults(p.settings.GetMaxResults())
+		MaxResults(maxResults)
 
 	return p.callApi(call)
 }
@@ -148,4 +151,13 @@ func (p *Player) callApi(call *youtube.SearchListCall) error {
 	p.Playlists = playlists
 
 	return nil
+}
+
+func (p Player) TogglePause() {
+	p.mpvInstance.TogglePause()
+}
+
+func (p Player) IsPaused() bool {
+	s, _ := p.mpvInstance.player.Pause()
+	return s
 }
