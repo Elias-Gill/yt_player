@@ -1,9 +1,10 @@
-# YouTube Music Player 
-
-Welcome to the YouTube Music Player, a simple and usefull wrapper for the YouTube API and the
-MPV player.
+A simple wrapper for the YouTube API and MPV player.
 This tool allows you to effortlessly search for and list YouTube videos, and play them directly
 using MPV.
+
+
+https://github.com/user-attachments/assets/f18fdf9e-2a61-4277-83c4-8542069eb923
+
 
 **Important Note**:
 To use this application, you will need a valid YouTube API key.
@@ -61,6 +62,12 @@ go install .
   Quickly search for YouTube videos and play them using MPV.
 - **User-Friendly**:
   Simple command-line interface for easy navigation and playback.
+
+# Future
+
+- Support for listing playlists
+- Reproduction queue
+- Custom Playlists
 
 # Contributing
 
