@@ -47,7 +47,6 @@ func (l VideoList) Update(msg tea.Msg) (VideoList, tea.Cmd) {
 			if l.currItem > 0 && l.currItem > l.page*l.height {
 				l.currItem--
 			}
-
 		case "l", tea.KeyRight.String():
 			if l.page+1 < l.pages {
 				l.page++
@@ -68,10 +67,13 @@ func (l VideoList) Update(msg tea.Msg) (VideoList, tea.Cmd) {
 				l.mode = modeVideos
 			}
 
-			// Player controls
+		// Player controls
 		case tea.KeySpace.String():
 			l.context.Player.TogglePause()
-
+		case "+":
+			l.context.Player.PlusFiveSecs()
+		case "-":
+			l.context.Player.LessFiveSecs()
 		case tea.KeyEnter.String():
 			if l.currItem < len(l.context.Player.Videos) {
 				l.context.Player.Play(l.currItem)

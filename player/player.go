@@ -157,6 +157,14 @@ func (p Player) TogglePause() {
 	p.mpvInstance.TogglePause()
 }
 
+func (p Player) PlusFiveSecs() {
+	p.mpvInstance.PlusFiveSecs()
+}
+
+func (p Player) LessFiveSecs() {
+	p.mpvInstance.LessFiveSecs()
+}
+
 func (p Player) IsPaused() bool {
 	s, _ := p.mpvInstance.player.Pause()
 	return s
