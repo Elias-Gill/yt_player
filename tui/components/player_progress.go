@@ -20,7 +20,7 @@ type PlayerProgress struct {
 	currPosition string
 }
 
-func NewPlayerInfo(ctx *context.Context) PlayerProgress {
+func NewPlayer(ctx *context.Context) PlayerProgress {
 	prg := progress.New()
 	prg.ShowPercentage = false
 	prg.Width = 80

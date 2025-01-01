@@ -1,8 +1,12 @@
 package player
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"log"
+	"os/exec"
 	"time"
 
 	"github.com/elias-gill/yt_player/settings"
@@ -20,9 +24,10 @@ type Player struct {
 	mpvInstance *mpvInstance
 	ytService   *youtube.Service
 
-	Playlists []Playlist
-	Videos    []Video
-	currSong  string
+	Playlists  []Playlist
+	Videos     []Video
+	currSong   string
+	currSongId string
 
 	nextPageToken string
 	prevPageToken string
@@ -31,6 +36,13 @@ type Player struct {
 type Playlist struct {
 	Title string
 	Id    string
+}
+
+type VideoDetails struct {
+	Duration    string `json:"duration_string"`
+	Author      string `json:"uploader"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
 }
 
 type Video struct {
@@ -56,7 +68,6 @@ func MustCreatePlayer(settings *settings.Settings) *Player {
 }
 
 func (p *Player) Search(searchKey string) error {
-	// Make the API call to YouTube.
 	call := p.ytService.Search.List([]string{"id", "snippet"}).
 		Q(searchKey).
 		MaxResults(maxResults)
@@ -64,20 +75,7 @@ func (p *Player) Search(searchKey string) error {
 	return p.callApi(call)
 }
 
-func (p *Player) GetVideoInfo(index int) (*youtube.VideoSnippet, error) {
-	videoCall := p.ytService.Videos.List([]string{"snippet", "contentDetails"}).
-		Id(p.Videos[index].Id).MaxResults(1)
-
-	videoResponse, err := videoCall.Do()
-	if err != nil {
-		return nil, err
-	}
-
-	return videoResponse.Items[0].Snippet, nil
-}
-
 func (p *Player) NextPage() error {
-	// Make the API call to YouTube.
 	call := p.ytService.Search.List([]string{"id", "snippet"}).
 		PageToken(p.nextPageToken).
 		MaxResults(maxResults)
@@ -86,7 +84,6 @@ func (p *Player) NextPage() error {
 }
 
 func (p *Player) PrevPage() error {
-	// Make the API call to YouTube.
 	call := p.ytService.Search.List([]string{"id", "snippet"}).
 		PageToken(p.prevPageToken).
 		MaxResults(maxResults)
@@ -168,4 +165,24 @@ func (p Player) LessFiveSecs() {
 func (p Player) IsPaused() bool {
 	s, _ := p.mpvInstance.player.Pause()
 	return s
+}
+
+// Retrieves the video duration, author, and description
+func GetVideoDetails(videoID string) (*VideoDetails, error) {
+	cmd := exec.Command("yt-dlp", "--dump-json", "--skip-download", fmt.Sprintf("%s%s", Yt_url, videoID))
+
+	var out bytes.Buffer
+	cmd.Stdout = &out
+
+	err := cmd.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	var info VideoDetails
+	if err := json.Unmarshal(out.Bytes(), &info); err != nil {
+		return nil, err
+	}
+
+	return &info, nil
 }

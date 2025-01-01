@@ -8,18 +8,18 @@ import (
 )
 
 type Tui struct {
-	context    *context.Context
-	textInput  components.Input
-	list       components.VideoList
-	playerInfo components.PlayerProgress
+	context   *context.Context
+	textInput components.Input
+	list      components.VideoList
+	player    components.PlayerProgress
 }
 
 func NewModel(ctx *context.Context) tea.Model {
 	return Tui{
-		context:    ctx,
-		textInput:  components.NewInput(ctx),
-		list:       components.NewList(ctx),
-		playerInfo: components.NewPlayerInfo(ctx),
+		context:   ctx,
+		textInput: components.NewInput(ctx),
+		list:      components.NewList(ctx),
+		player:    components.NewPlayer(ctx),
 	}
 }
 
@@ -32,18 +32,20 @@ func (t Tui) View() string {
 		Render(
 			lipgloss.JoinVertical(
 				0,
-				t.textInput.View(),
-				t.context.Styles.Background.
-					Height(t.context.WinHeight-5).
-					Width(t.context.WinWidth).
-					PaddingTop(1).
-					Render(t.list.View()),
-				t.playerInfo.View(),
+				t.textInput.View(), // Input
+				t.context.Styles.Background. // List + info
+								Height(t.context.WinHeight-5).
+								MaxHeight(t.context.WinHeight-5).
+								Width(t.context.WinWidth).
+								MaxWidth(t.context.WinWidth).
+								PaddingTop(1).
+								Render(t.list.View()),
+				t.player.View(), // Player
 			))
 }
 
 func (t Tui) Init() tea.Cmd {
-	return t.playerInfo.Init()
+	return t.player.Init()
 }
 
 func (t Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -63,6 +65,7 @@ func (t Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch t.context.CurrMode {
 			case context.LIST:
 				t.list, _ = t.list.Update(msg)
+
 			case context.SEARCH:
 				t.textInput, _ = t.textInput.Update(msg)
 			}
@@ -74,12 +77,12 @@ func (t Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		t.list, _ = t.list.Update(msg)
 		t.textInput, _ = t.textInput.Update(msg)
-		t.playerInfo, _ = t.playerInfo.Update(msg)
+		t.player, _ = t.player.Update(msg)
 
 		return t, nil
 
 	default:
-		t.playerInfo, cmd = t.playerInfo.Update(msg)
+		t.player, cmd = t.player.Update(msg)
 	}
 
 	return t, cmd

@@ -2,9 +2,11 @@ package components
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	lipgloss "github.com/charmbracelet/lipgloss"
 	"github.com/elias-gill/yt_player/context"
 )
 
@@ -18,9 +20,11 @@ type VideoList struct {
 	width   int
 	height  int
 
+	details VideoInfo
+
 	mode     int
 	currItem int
-	page     int
+	currPage int
 	pages    int
 }
 
@@ -28,6 +32,7 @@ func NewList(ctx *context.Context) VideoList {
 	return VideoList{
 		context: ctx,
 		mode:    modeVideos,
+		details: NewVideoInfo(ctx),
 	}
 }
 
@@ -39,23 +44,30 @@ func (l VideoList) Update(msg tea.Msg) (VideoList, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch msg.String() {
+		case "i", tea.KeyCtrlDown.String():
+			if len(l.context.Player.Videos) > 0 {
+				l.details = l.details.Update(l.context.Player.Videos[l.currItem].Id)
+			}
+
+			return l, nil
+
 		case "j", tea.KeyCtrlDown.String():
-			if l.currItem+1 < len(l.context.Player.Videos) && l.currItem+1 < (l.page+1)*l.height {
+			if l.currItem+1 < len(l.context.Player.Videos) && l.currItem+1 < (l.currPage+1)*l.height {
 				l.currItem++
 			}
 		case "k", tea.KeyCtrlPgUp.String():
-			if l.currItem > 0 && l.currItem > l.page*l.height {
+			if l.currItem > 0 && l.currItem > l.currPage*l.height {
 				l.currItem--
 			}
 		case "l", tea.KeyRight.String():
-			if l.page+1 < l.pages {
-				l.page++
-				l.currItem = l.page * l.height
+			if l.currPage+1 < l.pages {
+				l.currPage++
+				l.currItem = l.currPage * l.height
 			}
 		case "h", tea.KeyLeft.String():
-			if l.page > 0 {
-				l.page--
-				l.currItem = l.page * l.height
+			if l.currPage > 0 {
+				l.currPage--
+				l.currItem = l.currPage * l.height
 			}
 
 		case "q", "/", tea.KeyEsc.String():
@@ -70,7 +82,7 @@ func (l VideoList) Update(msg tea.Msg) (VideoList, tea.Cmd) {
 		// Player controls
 		case tea.KeySpace.String():
 			l.context.Player.TogglePause()
-		case "+":
+		case "+", "=":
 			l.context.Player.PlusFiveSecs()
 		case "-":
 			l.context.Player.LessFiveSecs()
@@ -94,7 +106,7 @@ func (l VideoList) View() string {
 	var msg strings.Builder
 	msg.Grow(len(videos) * 30) // Preallocate memory
 
-	for i := l.page * l.height; i < (l.page+1)*l.height; i++ {
+	for i := l.currPage * l.height; i < (l.currPage+1)*l.height; i++ {
 		if i >= len(l.context.Player.Videos) {
 			break
 		}
@@ -122,7 +134,7 @@ func (l VideoList) View() string {
 	msg.WriteString("\n")
 	for i := 0; i < l.pages; i++ {
 		var line string
-		if i == l.page {
+		if i == l.currPage {
 			line = l.context.Styles.ForegroundRed.Render(fmt.Sprintf("%d", i+1))
 		} else {
 			line = l.context.Styles.ForegroundGray.Render(fmt.Sprintf("%d", i+1))
@@ -130,10 +142,20 @@ func (l VideoList) View() string {
 
 		line += l.context.Styles.ForegroundGray.Render("  ")
 		msg.WriteString(line)
-
 	}
 
-	return msg.String()
+	listPlusInfo := lipgloss.JoinHorizontal(
+		0,
+		l.context.Styles.Background.
+			MaxWidth(int(math.Round(float64(l.context.WinWidth)*0.65))).
+			Width(int(math.Round(float64(l.context.WinWidth)*0.65))).
+			Render(msg.String()), // List
+		l.context.Styles.Background.
+			Width(int(math.Round(float64(l.context.WinWidth)*0.35))).
+			Render(l.details.View()), // info
+	)
+
+	return listPlusInfo
 }
 
 func (l VideoList) Init() tea.Cmd {
