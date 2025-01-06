@@ -13,14 +13,34 @@ import (
 
 const mpvSocket = "/tmp/mpvsocket"
 
-type mpvInstance struct {
-	player *mpv.Client
-	cmd    *exec.Cmd
+// Tries to reattach to a previous detached mpv player instance
+func reattachPlayer() *mpv.Client {
+	// Safely create the IPC connection and instantiate the client
+	safeNewClient := func(socket string) (*mpv.Client, error) {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("Cannot reattach to player instance: \n\t%v", r)
+			}
+		}()
+		ipc := mpv.NewIPCClient(socket)
+		client := mpv.NewClient(ipc)
+
+		return client, nil
+	}
+
+	player, err := safeNewClient("/tmp/mpvsocket")
+	if err != nil || player == nil {
+		return startMpvInstance()
+	}
+
+	player.SetProperty("idle", "yes")
+
+	return player
 }
 
 // Generates a new instance of the MpvPlayer cmd. Panics if MPV or youtube-dl executables cannot
 // be located in the path, or if the socket connection with MPV fails.
-func startMpvInstance() *mpvInstance {
+func startMpvInstance() *mpv.Client {
 	if !commandExists("mpv") {
 		fmt.Println("Cannot find mpv player")
 		os.Exit(1)
@@ -44,50 +64,47 @@ func startMpvInstance() *mpvInstance {
 	ipc := mpv.NewIPCClient("/tmp/mpvsocket")
 	player := mpv.NewClient(ipc)
 
-	return &mpvInstance{
-		player: player,
-		cmd:    cmd,
-	}
+	return player
 }
 
-func (m mpvInstance) StopPlayer() {
-	m.cmd.Process.Kill()
+func (m Player) StopPlayer() {
+	m.mpvInstance.Exec("quit")
 }
 
-// detach the player but stop idle mode, so the mpv process
+// Detach the player and stop idle mode so the mpv process
 // would stop after the song is over
-func (m mpvInstance) DetachPlayer() {
-	m.player.SetProperty("idle", "no")
+func (m Player) DetachPlayer() {
+	m.mpvInstance.SetProperty("idle", "no")
 }
 
-func (m mpvInstance) ChangeSong(id string) {
-	err := m.player.Loadfile(Yt_url+id, mpv.LoadFileModeReplace)
+func (m Player) ChangeSong(id string) {
+	err := m.mpvInstance.Loadfile(Yt_url+id, mpv.LoadFileModeReplace)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (m mpvInstance) TogglePause() {
-	p, _ := m.player.Pause()
-	m.player.SetPause(!p)
+func (m Player) TogglePause() {
+	p, _ := m.mpvInstance.Pause()
+	m.mpvInstance.SetPause(!p)
 }
 
-func (m mpvInstance) PlusFiveSecs() {
-	curTime, _ := m.player.GetFloatProperty("time-pos")
+func (m Player) PlusFiveSecs() {
+	curTime, _ := m.mpvInstance.GetFloatProperty("time-pos")
 	newTime := string(strconv.Itoa(int(curTime + 5)))
-	m.player.SetProperty("time-pos", newTime)
+	m.mpvInstance.SetProperty("time-pos", newTime)
 }
 
-func (m mpvInstance) LessFiveSecs() {
-	curTime, _ := m.player.GetFloatProperty("time-pos")
+func (m Player) LessFiveSecs() {
+	curTime, _ := m.mpvInstance.GetFloatProperty("time-pos")
 	newTime := string(strconv.Itoa(int(curTime - 5)))
-	m.player.SetProperty("time-pos", newTime)
+	m.mpvInstance.SetProperty("time-pos", newTime)
 }
 
 // Returns de lenght of the current position and the length of the song (position, length)
-func (m mpvInstance) GetSongStatus() (float64, float64) {
-	duration, _ := m.player.GetFloatProperty("duration")
-	curPos, _ := m.player.GetFloatProperty("time-pos")
+func (m Player) GetSongStatus() (float64, float64) {
+	duration, _ := m.mpvInstance.GetFloatProperty("duration")
+	curPos, _ := m.mpvInstance.GetFloatProperty("time-pos")
 
 	return curPos * 1e9, duration * 1e9
 }
@@ -95,4 +112,18 @@ func (m mpvInstance) GetSongStatus() (float64, float64) {
 func commandExists(cmd string) bool {
 	_, err := exec.LookPath(cmd)
 	return err == nil
+}
+
+func (p Player) IsPaused() bool {
+	s, _ := p.mpvInstance.Pause()
+	return s
+}
+
+func (p Player) GetCurrentSong() string {
+	title, err := p.mpvInstance.GetProperty("media-title")
+	if err != nil {
+		panic("Mpv connection failed: \n" + err.Error())
+	}
+
+	return title
 }

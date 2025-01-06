@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/blang/mpv"
 	"github.com/elias-gill/yt_player/settings"
 	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
@@ -21,7 +22,7 @@ const (
 
 type Player struct {
 	settings    *settings.Settings
-	mpvInstance *mpvInstance
+	mpvInstance *mpv.Client
 	ytService   *youtube.Service
 
 	Playlists  []Playlist
@@ -60,8 +61,15 @@ func MustCreatePlayer(settings *settings.Settings) *Player {
 		log.Fatalf("Error creating new YouTube client: %v", err)
 	}
 
+	var mpvInstance *mpv.Client
+	if settings.Tryreattach() {
+		mpvInstance = reattachPlayer()
+	} else {
+		mpvInstance = startMpvInstance()
+	}
+
 	return &Player{
-		mpvInstance: startMpvInstance(),
+		mpvInstance: mpvInstance,
 		settings:    settings,
 		ytService:   service,
 	}
@@ -96,20 +104,20 @@ func (p *Player) Play(index int) {
 		return
 	}
 
-	p.mpvInstance.ChangeSong(p.Videos[index].Id)
+	p.ChangeSong(p.Videos[index].Id)
 	p.currSong = p.Videos[index].Title
 }
 
 func (p Player) GetStatus() (float64, float64) {
-	return p.mpvInstance.GetSongStatus()
-}
-
-func (p Player) GetCurrentSong() string {
-	return p.currSong
+	return p.GetSongStatus()
 }
 
 func (p Player) Deinit() {
-	p.mpvInstance.StopPlayer()
+	if p.settings.DetachOnQuit() {
+		p.DetachPlayer()
+	} else {
+		p.StopPlayer()
+	}
 }
 
 func (p *Player) callApi(call *youtube.SearchListCall) error {
@@ -148,23 +156,6 @@ func (p *Player) callApi(call *youtube.SearchListCall) error {
 	p.Playlists = playlists
 
 	return nil
-}
-
-func (p Player) TogglePause() {
-	p.mpvInstance.TogglePause()
-}
-
-func (p Player) PlusFiveSecs() {
-	p.mpvInstance.PlusFiveSecs()
-}
-
-func (p Player) LessFiveSecs() {
-	p.mpvInstance.LessFiveSecs()
-}
-
-func (p Player) IsPaused() bool {
-	s, _ := p.mpvInstance.player.Pause()
-	return s
 }
 
 // Retrieves the video duration, author, and description
