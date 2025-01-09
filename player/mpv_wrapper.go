@@ -19,7 +19,7 @@ func reattachPlayer() *mpv.Client {
 	safeNewClient := func(socket string) (*mpv.Client, error) {
 		defer func() {
 			if r := recover(); r != nil {
-				fmt.Printf("Cannot reattach to player instance: \n\t%v", r)
+				fmt.Printf("Cannot reattach to player instance: \n\t%v\n\nStarting a new MPV instance", r)
 			}
 		}()
 		ipc := mpv.NewIPCClient(socket)

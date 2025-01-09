@@ -9,7 +9,7 @@ import (
 type Settings struct {
 	// flags
 	apiKey       string
-	reattach      bool
+	reattach     bool
 	detachOnQuit bool
 }
 
@@ -17,6 +17,7 @@ func MustParseConfig() *Settings {
 	keyFlag := flag.String("key", "", "Youtube developer key")
 	reattach := flag.Bool("reattach", false, "Try to reattach to a previous mpv instance")
 	detachOnQuit := flag.Bool("detach-on-quit", false, "Detaches the MPV instance instead of stoping the player.")
+
 	flag.Parse()
 
 	var apiKey string
@@ -35,7 +36,7 @@ func MustParseConfig() *Settings {
 
 	return &Settings{
 		apiKey:       apiKey,
-		reattach:      *reattach,
+		reattach:     *reattach,
 		detachOnQuit: *detachOnQuit,
 	}
 }

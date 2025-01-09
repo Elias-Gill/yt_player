@@ -2,7 +2,6 @@ package context
 
 import (
 	"github.com/charmbracelet/lipgloss"
-	"github.com/elias-gill/yt_player/completition"
 	"github.com/elias-gill/yt_player/player"
 	"github.com/elias-gill/yt_player/settings"
 )
@@ -31,7 +30,6 @@ type Context struct {
 	// Instances
 	Player  *player.Player
 	Config  *settings.Settings
-	History *completition.Completition
 	Styles  styles
 
 	// App Status
@@ -51,7 +49,6 @@ func (c *Context) NextMode() {
 
 func (c *Context) Deinit() {
 	c.Player.Deinit()
-	c.History.Deinit()
 }
 
 func MustLoadContext() *Context {
@@ -60,7 +57,6 @@ func MustLoadContext() *Context {
 	return &Context{
 		Config:   config,
 		Player:   player.MustCreatePlayer(config),
-		History:  completition.LoadHistory(),
 		CurrMode: SEARCH,
 
 		Styles: styles{

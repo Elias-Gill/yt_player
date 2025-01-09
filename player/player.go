@@ -25,13 +25,10 @@ type Player struct {
 	mpvInstance *mpv.Client
 	ytService   *youtube.Service
 
-	Playlists  []Playlist
-	Videos     []Video
-	currSong   string
-	currSongId string
+	Playlists []Playlist
+	Videos    []Video
 
-	nextPageToken string
-	prevPageToken string
+	history []HistoryEntry
 }
 
 type Playlist struct {
@@ -47,8 +44,8 @@ type VideoDetails struct {
 }
 
 type Video struct {
-	Title string
-	Id    string
+	Title string `json:"title"`
+	Id    string `json:"id"`
 }
 
 func MustCreatePlayer(settings *settings.Settings) *Player {
@@ -68,11 +65,21 @@ func MustCreatePlayer(settings *settings.Settings) *Player {
 		mpvInstance = startMpvInstance()
 	}
 
-	return &Player{
+	player := &Player{
 		mpvInstance: mpvInstance,
 		settings:    settings,
 		ytService:   service,
 	}
+
+	history := loadHistory()
+	if len(history) > 0 {
+		lastEntry := history[len(history)-1]
+		player.Videos = lastEntry.Videos
+		player.Playlists = lastEntry.Playlists
+	}
+	player.history = history
+
+	return player
 }
 
 func (p *Player) Search(searchKey string) error {
@@ -80,54 +87,10 @@ func (p *Player) Search(searchKey string) error {
 		Q(searchKey).
 		MaxResults(maxResults)
 
-	return p.callApi(call)
-}
-
-func (p *Player) NextPage() error {
-	call := p.ytService.Search.List([]string{"id", "snippet"}).
-		PageToken(p.nextPageToken).
-		MaxResults(maxResults)
-
-	return p.callApi(call)
-}
-
-func (p *Player) PrevPage() error {
-	call := p.ytService.Search.List([]string{"id", "snippet"}).
-		PageToken(p.prevPageToken).
-		MaxResults(maxResults)
-
-	return p.callApi(call)
-}
-
-func (p *Player) Play(index int) {
-	if index > len(p.Videos)-1 || len(p.Videos) == 0 || index < 0 {
-		return
-	}
-
-	p.ChangeSong(p.Videos[index].Id)
-	p.currSong = p.Videos[index].Title
-}
-
-func (p Player) GetStatus() (float64, float64) {
-	return p.GetSongStatus()
-}
-
-func (p Player) Deinit() {
-	if p.settings.DetachOnQuit() {
-		p.DetachPlayer()
-	} else {
-		p.StopPlayer()
-	}
-}
-
-func (p *Player) callApi(call *youtube.SearchListCall) error {
 	response, err := call.Do()
 	if err != nil {
 		return err
 	}
-
-	p.nextPageToken = response.NextPageToken
-	p.prevPageToken = response.PrevPageToken
 
 	// Group video, channel, and playlist results in separate lists.
 	videos := []Video{}
@@ -155,7 +118,31 @@ func (p *Player) callApi(call *youtube.SearchListCall) error {
 	p.Videos = videos
 	p.Playlists = playlists
 
+	p.addHistoryEntry(searchKey, videos, playlists)
+
 	return nil
+}
+
+func (p *Player) Play(index int) {
+	if index > len(p.Videos)-1 || len(p.Videos) == 0 || index < 0 {
+		return
+	}
+
+	p.ChangeSong(p.Videos[index].Id)
+}
+
+func (p Player) GetStatus() (float64, float64) {
+	return p.GetSongStatus()
+}
+
+func (p Player) Deinit() {
+	p.persistHistory()
+
+	if p.settings.DetachOnQuit() {
+		p.DetachPlayer()
+	} else {
+		p.StopPlayer()
+	}
 }
 
 // Retrieves the video duration, author, and description
