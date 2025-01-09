@@ -14,7 +14,7 @@ const (
 )
 
 type styles struct {
-	// Global Colors
+	// Global background color
 	Background lipgloss.Style
 
 	// Foreground focus Colors
@@ -22,6 +22,7 @@ type styles struct {
 	ForegroundAqua lipgloss.Style
 	ForegroundGray lipgloss.Style
 
+	// Background focus Colors
 	BackgroundRed  lipgloss.Style
 	BackgroundGray lipgloss.Style
 }
@@ -61,8 +62,7 @@ func MustLoadContext() *Context {
 
 		Styles: styles{
 			Background: lipgloss.NewStyle().
-				Background(lipgloss.Color("#1d2021")).
-				Padding(1),
+				Background(lipgloss.Color("#1d2021")),
 			BackgroundRed: lipgloss.NewStyle().
 				Foreground(lipgloss.Color("#282828")).
 				Background(lipgloss.Color("#f96c5b")),

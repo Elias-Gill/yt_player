@@ -25,6 +25,7 @@ func NewModel(ctx *context.Context) tea.Model {
 
 func (t Tui) View() string {
 	return t.context.Styles.Background.
+		Padding(1).
 		MaxWidth(t.context.WinWidth).
 		Width(t.context.WinWidth).
 		Height(t.context.WinHeight).

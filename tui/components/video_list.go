@@ -8,6 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	lipgloss "github.com/charmbracelet/lipgloss"
 	"github.com/elias-gill/yt_player/context"
+	"github.com/elias-gill/yt_player/player"
 )
 
 const (
@@ -20,7 +21,7 @@ type VideoList struct {
 	width   int
 	height  int
 
-	details VideoInfo
+	details string
 
 	mode     int
 	currItem int
@@ -32,7 +33,7 @@ func NewList(ctx *context.Context) VideoList {
 	return VideoList{
 		context: ctx,
 		mode:    modeVideos,
-		details: NewVideoInfo(ctx),
+		details: "To retrive video information press 'i'",
 	}
 }
 
@@ -40,13 +41,13 @@ func (l VideoList) Update(msg tea.Msg) (VideoList, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		l.width = msg.Width
-		l.height = msg.Height - 9
+		l.height = msg.Height - 10
 
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "i", tea.KeyCtrlDown.String():
 			if len(l.context.Player.Videos) > 0 {
-				l.details = l.details.Update(l.context.Player.Videos[l.currItem].Id)
+				l.updateVideoDetails()
 			}
 
 			return l, nil
@@ -103,35 +104,37 @@ func (l VideoList) View() string {
 		return l.context.Styles.ForegroundGray.Render("No Available Videos ...")
 	}
 
-	var msg strings.Builder
-	msg.Grow(len(videos) * 30) // Preallocate memory
+	listWidth := int(math.Round(float64(l.context.WinWidth) * 0.62))
+	infoWidth := int(math.Round(float64(l.context.WinWidth) * 0.35))
+
+	var list strings.Builder
+	list.Grow(len(videos) * 30) // Preallocate memory
 
 	for i := l.currPage * l.height; i < (l.currPage+1)*l.height; i++ {
 		if i >= len(l.context.Player.Videos) {
 			break
 		}
+
 		video := videos[i]
 		title := video.Title
-		if len(title) > l.context.WinWidth-7 {
-			title = title[0 : l.context.WinWidth-8]
-		}
 
 		// Prepare the line to write
 		var line string
 		if i == l.currItem {
 			if l.context.CurrMode == context.LIST {
-				line = l.context.Styles.ForegroundRed.Render(fmt.Sprintf("%d  %s", i+1, title))
+				line = l.context.Styles.ForegroundRed.MaxWidth(listWidth - 1).Render(fmt.Sprintf("%d  %s", i+1, title))
 			} else {
-				line = l.context.Styles.ForegroundGray.Render(fmt.Sprintf("%d  %s", i+1, title))
+				line = l.context.Styles.ForegroundGray.MaxWidth(listWidth - 1).Render(fmt.Sprintf("%d  %s", i+1, title))
 			}
 		} else {
-			line = fmt.Sprintf("%d  %s", i+1, title)
+			line = l.context.Styles.Background.MaxWidth(listWidth - 1).Render(fmt.Sprintf("%d  %s", i+1, title))
 		}
 
-		msg.WriteString(line + "\n")
+		list.WriteString(line + "\n")
 	}
 
-	msg.WriteString("\n")
+	var pagination strings.Builder
+	list.Grow(30)
 	for i := 0; i < l.pages; i++ {
 		var line string
 		if i == l.currPage {
@@ -141,23 +144,43 @@ func (l VideoList) View() string {
 		}
 
 		line += l.context.Styles.ForegroundGray.Render("  ")
-		msg.WriteString(line)
+		pagination.WriteString(line)
 	}
 
 	listPlusInfo := lipgloss.JoinHorizontal(
 		0,
-		l.context.Styles.Background.
-			MaxWidth(int(math.Round(float64(l.context.WinWidth)*0.65))).
-			Width(int(math.Round(float64(l.context.WinWidth)*0.65))).
-			Render(msg.String()), // List
-		l.context.Styles.Background.
-			Width(int(math.Round(float64(l.context.WinWidth)*0.35))).
-			Render(l.details.View()), // info
+		l.context.Styles.Background. // list
+						MaxWidth(listWidth).
+						Width(listWidth).
+						Render(list.String()),
+		lipgloss.NewStyle(). // info
+					Width(infoWidth).
+					PaddingLeft(1).
+					MaxWidth(infoWidth).
+					Height(l.height).
+					MaxHeight(l.height).
+					Render(l.details),
 	)
 
-	return listPlusInfo
+	return lipgloss.JoinVertical(0,
+		l.context.Styles.Background.Render(listPlusInfo),
+		l.context.Styles.Background.Width(l.width).Render(pagination.String()))
 }
 
 func (l VideoList) Init() tea.Cmd {
 	return nil
+}
+
+func (l *VideoList) updateVideoDetails() {
+	video := l.context.Player.Videos[l.currItem].Id
+	details, err := player.GetVideoDetails(video)
+	if err != nil {
+		l.details = "Cannot retrieve video details\n" + err.Error()
+	}
+
+	l.details = fmt.Sprintf("Author: %s\nDuration: %s\nTitle: %s\nDescription: %s",
+		details.Author,
+		details.Duration,
+		details.Title,
+		details.Description)
 }
