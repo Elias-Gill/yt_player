@@ -34,8 +34,8 @@ func (v VideoInfo) View() string {
 	// Set a rounded, yellow-on-purple border to the top and left
 	var anotherStyle = v.ctx.Styles.Background.
 		PaddingTop(0).
-		Width(int(math.Round(float64(v.ctx.WinWidth) * 0.30)) - 1).
-		MaxWidth(int(math.Round(float64(v.ctx.WinWidth) * 0.30)) - 1).
+		Width(int(math.Round(float64(v.ctx.WinWidth)*0.30)) - 1).
+		MaxWidth(int(math.Round(float64(v.ctx.WinWidth)*0.30)) - 1).
 		Height(v.ctx.WinHeight - 9).
 		MaxHeight(v.ctx.WinHeight - 9).
 		BorderStyle(lipgloss.RoundedBorder()).

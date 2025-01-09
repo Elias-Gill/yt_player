@@ -28,9 +28,9 @@ type styles struct {
 
 type Context struct {
 	// Instances
-	Player  *player.Player
-	Config  *settings.Settings
-	Styles  styles
+	Player *player.Player
+	Config *settings.Settings
+	Styles styles
 
 	// App Status
 	CurrMode  Mode
