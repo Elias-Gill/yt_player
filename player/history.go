@@ -65,7 +65,17 @@ func (p *Player) addHistoryEntry(input string, videos []Video, playlists []Playl
 }
 
 func (c Player) GetHistory() []HistoryEntry {
-	return c.history
+	if len(c.history) == 0 {
+		return c.history
+	}
+
+	// reverse history
+	var aux []HistoryEntry
+	for i := len(c.history) - 1; i >= 0; i-- {
+		aux = append(aux, c.history[i])
+	}
+
+	return aux
 }
 
 // Tries to persist the current history. If the file cannot be accesed returns an error
