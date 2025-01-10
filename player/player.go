@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"regexp"
 	"time"
 
 	"github.com/blang/mpv"
@@ -96,21 +97,24 @@ func (p *Player) Search(searchKey string) error {
 	videos := []Video{}
 	playlists := []Playlist{}
 
+	// To clean emojis and special characters that are cuasing bad rendering on
+	// Tmux.
+
 	// Iterate through each item and add it to the correct list.
 	for _, item := range response.Items {
 		if item.Id.Kind == "youtube#video" {
 			videos = append(videos,
 				Video{
-					Title: item.Snippet.Title,
-					Id:    item.Id.VideoId,
+					Title: removeEmojis(item.Snippet.Title),
+					Id:    removeEmojis(item.Id.VideoId),
 				})
 		}
 
 		if item.Id.Kind == "youtube#playlist" {
 			playlists = append(playlists,
 				Playlist{
-					Title: item.Snippet.Title,
-					Id:    item.Id.VideoId,
+					Title: removeEmojis(item.Snippet.Title),
+					Id:    removeEmojis(item.Id.VideoId),
 				})
 		}
 	}
@@ -162,5 +166,14 @@ func GetVideoDetails(videoID string) (*VideoDetails, error) {
 		return nil, err
 	}
 
+	info.Description = removeEmojis(info.Description)
+	info.Author = removeEmojis(info.Author)
+	info.Title = removeEmojis(info.Title)
+
 	return &info, nil
+}
+
+func removeEmojis(input string) string {
+	emojiRegex := regexp.MustCompile(`[\x{1F600}-\x{1F64F}\x{1F300}-\x{1F5FF}\x{1F680}-\x{1F6FF}\x{1F1E0}-\x{1F1FF}\x{2702}-\x{27B0}\x{24C2}-\x{1F251}]`)
+	return emojiRegex.ReplaceAllString(input, "")
 }

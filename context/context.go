@@ -11,6 +11,7 @@ type Mode int
 const (
 	SEARCH = iota
 	LIST
+	HISTORY
 )
 
 type styles struct {
@@ -33,19 +34,10 @@ type Context struct {
 	Config *settings.Settings
 	Styles styles
 
-	// App Status
-	CurrMode  Mode
+	CurrMode Mode
+
 	WinHeight int
 	WinWidth  int
-	Error     error
-}
-
-func (c *Context) NextMode() {
-	if c.CurrMode == LIST {
-		c.CurrMode = SEARCH
-	} else {
-		c.CurrMode++
-	}
 }
 
 func (c *Context) Deinit() {

@@ -12,18 +12,24 @@ type Tui struct {
 	textInput components.Input
 	list      components.VideoList
 	player    components.PlayerProgress
+	history   components.HistoryList
 }
 
 func NewModel(ctx *context.Context) tea.Model {
 	return Tui{
 		context:   ctx,
 		textInput: components.NewInput(ctx),
-		list:      components.NewList(ctx),
+		list:      components.NewVideoList(ctx),
 		player:    components.NewPlayer(ctx),
+		history:   components.NewHistoryList(ctx),
 	}
 }
 
 func (t Tui) View() string {
+	if t.context.CurrMode == context.HISTORY {
+		return t.history.View()
+	}
+
 	return t.context.Styles.Background.
 		Padding(1).
 		MaxWidth(t.context.WinWidth).
@@ -58,8 +64,17 @@ func (t Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyCtrlC.String():
 			return t, tea.Quit
 
+		case "~":
+			t.context.CurrMode = context.HISTORY
+			return t, nil
+
 		case tea.KeyTab.String():
-			t.context.NextMode()
+			if t.context.CurrMode == context.LIST {
+				t.context.CurrMode = context.SEARCH
+			} else {
+				t.context.CurrMode = context.LIST
+			}
+
 			return t, nil
 
 		default:
@@ -69,6 +84,9 @@ func (t Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			case context.SEARCH:
 				t.textInput, _ = t.textInput.Update(msg)
+
+			case context.HISTORY:
+				t.history, _ = t.history.Update(msg)
 			}
 		}
 
@@ -79,6 +97,7 @@ func (t Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		t.list, _ = t.list.Update(msg)
 		t.textInput, _ = t.textInput.Update(msg)
 		t.player, _ = t.player.Update(msg)
+		t.history, _ = t.history.Update(msg)
 
 		return t, nil
 

@@ -29,7 +29,7 @@ type VideoList struct {
 	pages    int
 }
 
-func NewList(ctx *context.Context) VideoList {
+func NewVideoList(ctx *context.Context) VideoList {
 	return VideoList{
 		context: ctx,
 		mode:    modeVideos,

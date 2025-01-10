@@ -64,6 +64,10 @@ func (p *Player) addHistoryEntry(input string, videos []Video, playlists []Playl
 	}
 }
 
+func (c Player) GetHistory() []HistoryEntry {
+	return c.history
+}
+
 // Tries to persist the current history. If the file cannot be accesed returns an error
 func (c Player) persistHistory() error {
 	cache, err := os.UserCacheDir()
