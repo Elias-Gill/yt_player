@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-const maxHistorySize = 50
+const maxHistorySize = 20
 const historyFile = "yt_history"
 
 type HistoryEntry struct {

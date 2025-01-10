@@ -119,7 +119,7 @@ func (l HistoryList) View() string {
 		Padding(1).
 		Render(
 			lipgloss.JoinVertical(0,
-				l.context.Styles.BackgroundGray.Render("Select History Entry"),
+				l.context.Styles.BackgroundGray.Render(" Select History Entry "),
 				l.context.Styles.Background.
 					Padding(1).
 					MaxWidth(l.width).
