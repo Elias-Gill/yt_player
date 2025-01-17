@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger on tags like v1.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21' # Replace with your Go version
+
+      - name: Build for Linux
+        run: |
+          GOOS=linux GOARCH=amd64 go build -o bin/yt_player-linux-amd64 .
+          GOOS=linux GOARCH=arm64 go build -o bin/yt_player-linux-arm64 .
+
+      - name: Build for Windows
+        run: |
+          GOOS=windows GOARCH=amd64 go build -o bin/yt_player-windows-amd64.exe .
+
+      - name: Build for macOS
+        run: |
+          GOOS=darwin GOARCH=amd64 go build -o bin/yt_player-darwin-amd64 .
+          GOOS=darwin GOARCH=arm64 go build -o bin/yt_player-darwin-arm64 .
+
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Linux (amd64) executable
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/yt_player-linux-amd64
+          asset_name: yt_player-linux-amd64
+
+      - name: Upload Linux (arm64) executable
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/yt_player-linux-arm64
+          asset_name: yt_player-linux-arm64
+
+      - name: Upload Windows (amd64) executable
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/yt_player-windows-amd64.exe
+          asset_name: yt_player-windows-amd64.exe
+
+      - name: Upload macOS (amd64) executable
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/yt_player-darwin-amd64
+          asset_name: yt_player-darwin-amd64
+
+      - name: Upload macOS (arm64) executable
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/yt_player-darwin-arm64
+          asset_name: yt_player-darwin-arm64
