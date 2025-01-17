@@ -35,6 +35,7 @@ type Context struct {
 	Styles styles
 
 	CurrMode Mode
+	Error    error
 
 	WinHeight int
 	WinWidth  int

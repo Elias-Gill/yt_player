@@ -24,7 +24,10 @@ const (
 type Player struct {
 	settings    *settings.Settings
 	mpvInstance *mpv.Client
-	ytService   *youtube.Service
+
+	ytService  *youtube.Service
+	cancelFunc context.CancelFunc
+	serviceCtx context.Context
 
 	Playlists []Playlist
 	Videos    []Video
@@ -50,7 +53,7 @@ type Video struct {
 }
 
 func MustCreatePlayer(settings *settings.Settings) *Player {
-	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
 	service, err := youtube.NewService(
 		ctx, option.WithAPIKey(settings.GetApiKey()),
 	)
@@ -69,7 +72,10 @@ func MustCreatePlayer(settings *settings.Settings) *Player {
 	player := &Player{
 		mpvInstance: mpvInstance,
 		settings:    settings,
-		ytService:   service,
+
+		ytService:  service,
+		serviceCtx: ctx,
+		cancelFunc: cancelFunc,
 	}
 
 	history := loadHistory()
@@ -87,10 +93,12 @@ func (p *Player) Search(searchKey string) error {
 	call := p.ytService.Search.List([]string{"id", "snippet"}).
 		Q(searchKey).
 		MaxResults(maxResults)
+	defer p.cancelFunc()
 
 	response, err := call.Do()
+
 	if err != nil {
-		return err
+		return fmt.Errorf("Cannot search for youtube videos")
 	}
 
 	// Group video, channel, and playlist results in separate lists.

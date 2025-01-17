@@ -46,8 +46,8 @@ func (i Input) Update(msg tea.Msg) (Input, tea.Cmd) {
 	case tea.KeyMsg:
 		if msg.Type == tea.KeyEnter {
 			i.ctx.CurrMode = context.LIST
-			i.ctx.Player.Search(i.textInput.Value())
-
+			err := i.ctx.Player.Search(i.textInput.Value())
+			i.ctx.Error = err
 			return i, nil
 		}
 	}

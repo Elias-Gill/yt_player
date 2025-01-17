@@ -147,6 +147,13 @@ func (l VideoList) View() string {
 		pagination.WriteString(line)
 	}
 
+	// Display context errors alongside pagination
+	var err = ""
+	if l.context.Error != nil {
+		err = l.context.Error.Error()
+	}
+	pagination.WriteString("  " + l.context.Styles.Background.Render(err))
+
 	listPlusInfo := lipgloss.JoinHorizontal(
 		0,
 		l.context.Styles.Background. // list
