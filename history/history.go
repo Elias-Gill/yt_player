@@ -18,9 +18,8 @@ type HistoryEntry struct {
 }
 
 type History struct {
-	History    []HistoryEntry   `json:"history"`
-	LastSearch *HistoryEntry    `json:"last_search"`
-	LastSong   *ytservice.Video `json:"last_song"`
+	History    []HistoryEntry `json:"history"`
+	LastSearch *HistoryEntry  `json:"last_search"`
 }
 
 // Loads the history file into memory. If the history file is not available, the history
