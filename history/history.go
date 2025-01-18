@@ -1,85 +1,95 @@
-package player
+package history
 
 import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+
+	ytservice "github.com/elias-gill/yt_player/yt_service"
 )
 
 const maxHistorySize = 20
 const historyFile = "yt_history"
 
 type HistoryEntry struct {
-	Input     string     `json:"input"`
-	Videos    []Video    `json:"videos"`
-	Playlists []Playlist `json:"playlists"`
+	Input     string               `json:"input"`
+	Videos    []ytservice.Video    `json:"videos"`
+	Playlists []ytservice.Playlist `json:"playlists"`
+}
+
+type History struct {
+	History    []HistoryEntry   `json:"history"`
+	LastSearch *HistoryEntry    `json:"last_search"`
+	LastSong   *ytservice.Video `json:"last_song"`
 }
 
 // Loads the history file into memory. If the history file is not available, the history
 // is still managed in volatile memory.
-func loadHistory() []HistoryEntry {
+func LoadHistory() History {
 	cache, err := os.UserCacheDir()
 	if err != nil {
-		return []HistoryEntry{}
+		return History{}
 	}
 
 	filePath := filepath.Join(cache, historyFile)
 
 	content, err := os.Open(filePath)
 	if err != nil {
-		return []HistoryEntry{}
+		return History{}
 	}
 
-	var hist []HistoryEntry
+	var hist History
 	err = json.NewDecoder(content).Decode(&hist)
 	if err != nil {
-		return []HistoryEntry{}
+		return History{}
 	}
 
 	return hist
 }
 
-func (p *Player) selectEntry(index int) {
-	if index > len(p.history)-1 || index < 0 {
-		return
+func (h *History) SelectEntry(index int) *HistoryEntry {
+	if index > len(h.History)-1 || index < 0 {
+		return nil
 	}
 
-	entry := p.history[index]
+	// Invert the selection index because the `getHistory` function returns the entry list
+	// in reverse order. Calculate the inverted index as `history.length - 1 - index`.
+	entry := h.History[len(h.History)-1-index]
+	h.LastSearch = &entry
 
-	p.Playlists = entry.Playlists
-	p.Videos = entry.Videos
+	return &entry
 }
 
 // Adds a new entry to the search history. If the maxHistorySize is reached, then replaces
 // the LRU element in the completition history.
-func (p *Player) addHistoryEntry(input string, videos []Video, playlists []Playlist) {
-	size := len(p.history)
+func (h *History) AddHistoryEntry(input string, videos []ytservice.Video, playlists []ytservice.Playlist) {
+	size := len(h.History)
 	entry := HistoryEntry{Input: input, Videos: videos, Playlists: playlists}
 
 	if size == maxHistorySize {
-		p.history = p.history[1 : size-1]
-		p.history = append(p.history, entry)
+		h.History = h.History[1 : size-1]
+		h.History = append(h.History, entry)
 	} else {
-		p.history = append(p.history, entry)
+		h.History = append(h.History, entry)
 	}
 }
 
-func (c Player) GetHistory() []HistoryEntry {
-	if len(c.history) == 0 {
-		return c.history
+func (p History) GetHistoryList() []HistoryEntry {
+	if len(p.History) == 0 {
+		return p.History
 	}
 
 	// reverse history
 	var aux []HistoryEntry
-	for i := len(c.history) - 1; i >= 0; i-- {
-		aux = append(aux, c.history[i])
+	for i := len(p.History) - 1; i >= 0; i-- {
+		aux = append(aux, p.History[i])
 	}
 
 	return aux
 }
 
 // Tries to persist the current history. If the file cannot be accesed returns an error
-func (c Player) persistHistory() error {
+func (h History) PersistHistory() error {
 	cache, err := os.UserCacheDir()
 	if err != nil {
 		return err
@@ -101,6 +111,6 @@ func (c Player) persistHistory() error {
 	}
 	defer file.Close()
 
-	json.NewEncoder(file).Encode(c.history)
+	json.NewEncoder(file).Encode(h)
 	return nil
 }

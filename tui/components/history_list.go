@@ -26,17 +26,18 @@ func NewHistoryList(ctx *context.Context) HistoryList {
 }
 
 func (l HistoryList) Update(msg tea.Msg) (HistoryList, tea.Cmd) {
+	hist := l.context.Player.GetHistory()
+	historyList := hist.GetHistoryList()
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		l.width = msg.Width - 2 // minus padding
 		l.height = msg.Height - 10
 
 	case tea.KeyMsg:
-		history := l.context.Player.GetHistory()
-
 		switch msg.String() {
 		case "j", tea.KeyCtrlDown.String():
-			if l.currItem+1 < len(history) && l.currItem+1 < (l.currPage+1)*l.height {
+			if l.currItem+1 < len(historyList) && l.currItem+1 < (l.currPage+1)*l.height {
 				l.currItem++
 			}
 		case "k", tea.KeyCtrlPgUp.String():
@@ -58,22 +59,20 @@ func (l HistoryList) Update(msg tea.Msg) (HistoryList, tea.Cmd) {
 			l.context.CurrMode = context.LIST
 
 		case tea.KeyEnter.String():
-			if l.currItem < len(history) {
-				item := history[l.currItem]
-				l.context.Player.Playlists = item.Playlists
-				l.context.Player.Videos = item.Videos
+			if l.currItem < len(historyList) {
+				l.context.Player.SelHistoryEntry(l.currItem)
 			}
 
 			l.context.CurrMode = context.LIST
 		}
 	}
 
-	l.pages = len(l.context.Player.GetHistory()) / (l.height)
+	l.pages = len(historyList) / (l.height)
 	return l, nil
 }
 
 func (l HistoryList) View() string {
-	entries := l.context.Player.GetHistory()
+	entries := l.context.Player.GetHistory().GetHistoryList()
 	if entries == nil || len(entries) == 0 {
 		return l.context.Styles.ForegroundGray.Render("No Available History ...")
 	}

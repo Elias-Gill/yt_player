@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/blang/mpv"
+	ytservice "github.com/elias-gill/yt_player/yt_service"
 )
 
 const mpvSocket = "/tmp/mpvsocket"
@@ -78,7 +79,7 @@ func (m Player) DetachPlayer() {
 }
 
 func (m Player) ChangeSong(id string) {
-	err := m.mpvInstance.Loadfile(Yt_url+id, mpv.LoadFileModeReplace)
+	err := m.mpvInstance.Loadfile(ytservice.Yt_url+id, mpv.LoadFileModeReplace)
 	if err != nil {
 		panic(err)
 	}

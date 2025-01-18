@@ -8,7 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	lipgloss "github.com/charmbracelet/lipgloss"
 	"github.com/elias-gill/yt_player/context"
-	"github.com/elias-gill/yt_player/player"
+	ytservice "github.com/elias-gill/yt_player/yt_service"
 )
 
 const (
@@ -180,7 +180,7 @@ func (l VideoList) Init() tea.Cmd {
 
 func (l *VideoList) updateVideoDetails() {
 	video := l.context.Player.Videos[l.currItem].Id
-	details, err := player.GetVideoDetails(video)
+	details, err := ytservice.GetVideoDetails(video)
 	if err != nil {
 		l.details = "Cannot retrieve video details\n" + err.Error()
 	}
