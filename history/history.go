@@ -65,6 +65,7 @@ func (h *History) SelectEntry(index int) *HistoryEntry {
 func (h *History) AddHistoryEntry(input string, videos []ytservice.Video, playlists []ytservice.Playlist) {
 	size := len(h.History)
 	entry := HistoryEntry{Input: input, Videos: videos, Playlists: playlists}
+	h.LastSearch = &entry
 
 	if size == maxHistorySize {
 		h.History = h.History[1 : size-1]
