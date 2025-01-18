@@ -12,6 +12,7 @@ const (
 	SEARCH = iota
 	LIST
 	HISTORY
+	HELP
 )
 
 type styles struct {

@@ -30,25 +30,47 @@ func (t Tui) View() string {
 		return t.history.View()
 	}
 
-	return t.context.Styles.Background.
+	style := t.context.Styles.Background.
 		Padding(1).
 		MaxWidth(t.context.WinWidth).
 		Width(t.context.WinWidth).
 		Height(t.context.WinHeight).
-		MaxHeight(t.context.WinHeight).
-		Render(
-			lipgloss.JoinVertical(
-				0,
-				t.textInput.View(), // Input
-				t.context.Styles.Background. // List + info
-								Height(t.context.WinHeight-5).
-								MaxHeight(t.context.WinHeight-5).
-								Width(t.context.WinWidth).
-								MaxWidth(t.context.WinWidth).
-								PaddingTop(1).
-								Render(t.list.View()),
-				t.player.View(), // Player
-			))
+		MaxHeight(t.context.WinHeight)
+
+	if t.context.CurrMode == context.HELP {
+		helpMessage := `
+	Keybinds:
+		- "\": Enter history mode
+		- Enter: Select entry/search
+		- j/k or Arrow Keys: Navigate up and down
+		- h/l or Arrow Keys: Go to next page or previous page
+		- Tab: Cycle between search and list
+		- Ctrl+C: Quit (detach from player if the --detach-on-quit flag is given)
+		- q: Similar to "Tab"
+
+	Player Controls:
+		- Space: Pause player
+		- "+": Skip forward 5 seconds
+		- "-": Skip backward 5 seconds
+
+		`
+		contMsg := t.context.Styles.ForegroundRed.Render("... Press any key to continue")
+		return style.Render(helpMessage + contMsg)
+	}
+
+	return style.Render(
+		lipgloss.JoinVertical(
+			0,
+			t.textInput.View(), // Input
+			t.context.Styles.Background. // List + info
+							Height(t.context.WinHeight-5).
+							MaxHeight(t.context.WinHeight-5).
+							Width(t.context.WinWidth).
+							MaxWidth(t.context.WinWidth).
+							PaddingTop(1).
+							Render(t.list.View()),
+			t.player.View(), // Player
+		))
 }
 
 func (t Tui) Init() tea.Cmd {
@@ -64,8 +86,12 @@ func (t Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyCtrlC.String():
 			return t, tea.Quit
 
-		case "~":
+		case "\\":
 			t.context.CurrMode = context.HISTORY
+			return t, nil
+
+		case "~":
+			t.context.CurrMode = context.HELP
 			return t, nil
 
 		case tea.KeyTab.String():
@@ -87,6 +113,9 @@ func (t Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			case context.HISTORY:
 				t.history, _ = t.history.Update(msg)
+
+			case context.HELP: // Scape help on any key press
+				t.context.CurrMode = context.LIST
 			}
 		}
 

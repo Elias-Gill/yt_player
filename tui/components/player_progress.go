@@ -55,7 +55,7 @@ func (p PlayerProgress) Update(msg tea.Msg) (PlayerProgress, tea.Cmd) {
 }
 
 func (p PlayerProgress) View() string {
-	hPrompt := "Help: '?'"
+	hPrompt := "Help: '~'"
 	help := p.ctx.Styles.ForegroundGray.Inherit(p.ctx.Styles.Background).Render(hPrompt)
 
 	style := p.ctx.Styles.ForegroundAqua
