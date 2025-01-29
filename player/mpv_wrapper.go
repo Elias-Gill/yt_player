@@ -18,20 +18,21 @@ const mpvSocket = "/tmp/mpvsocket"
 func reattachPlayer() *mpv.Client {
 	// Safely create the IPC connection and instantiate the client intercepting the mpv library
 	// panic.
-	safeNewClient := func(socket string) (*mpv.Client, error) {
+	safeNewClient := func(socket string) *mpv.Client {
 		defer func() {
 			if r := recover(); r != nil {
 				fmt.Printf("Cannot reattach to player instance: \n\t%v\n\nStarting a new MPV instance", r)
 			}
 		}()
+
 		ipc := mpv.NewIPCClient(socket)
 		client := mpv.NewClient(ipc)
 
-		return client, nil
+		return client
 	}
 
-	player, err := safeNewClient("/tmp/mpvsocket")
-	if err != nil || player == nil {
+	player := safeNewClient(mpvSocket)
+	if player == nil {
 		return startMpvInstance()
 	}
 
@@ -60,18 +61,19 @@ func startMpvInstance() *mpv.Client {
 		os.Exit(1)
 	}
 
-	// Create the socket connection
-	ipc := mpv.NewIPCClient("/tmp/mpvsocket")
-
 	// Wait for MPV IPC socket to be available (retry mechanism)
 	for i := 0; i < 10; i++ { // Retry up to 10 times
 		if _, err := os.Stat(mpvSocket); err == nil {
 			break
 		}
+		if i == 9 {
+			fmt.Println("Cannot stablish connection with MPV instance")
+			os.Exit(1)
+		}
 		time.Sleep(200 * time.Millisecond)
 	}
 
-	// Connect to the mpv instance
+	ipc := mpv.NewIPCClient(mpvSocket)
 	player := mpv.NewClient(ipc)
 
 	return player
