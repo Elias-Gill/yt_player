@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/blang/mpv"
@@ -16,7 +16,8 @@ const mpvSocket = "/tmp/mpvsocket"
 
 // Tries to reattach to a previous detached mpv player instance
 func reattachPlayer() *mpv.Client {
-	// Safely create the IPC connection and instantiate the client
+	// Safely create the IPC connection and instantiate the client intercepting the mpv library
+	// panic.
 	safeNewClient := func(socket string) (*mpv.Client, error) {
 		defer func() {
 			if r := recover(); r != nil {
@@ -53,16 +54,24 @@ func startMpvInstance() *mpv.Client {
 	}
 
 	cmd := exec.Command("mpv", "--idle=yes", "--input-ipc-server="+mpvSocket, "--no-video")
-
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true} // Create a new process group to detach tmux
 	if err := cmd.Start(); err != nil {
-		fmt.Println("Error starting mpv player: ", err.Error())
+		fmt.Println("Error starting mpv: ", err.Error())
 		os.Exit(1)
 	}
 
-	// wait for the mpv process to start. A little hacky but anyways
-	time.Sleep(time.Second)
-
+	// Create the socket connection
 	ipc := mpv.NewIPCClient("/tmp/mpvsocket")
+
+	// Wait for MPV IPC socket to be available (retry mechanism)
+	for i := 0; i < 10; i++ { // Retry up to 10 times
+		if _, err := os.Stat(mpvSocket); err == nil {
+			break
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+
+	// Connect to the mpv instance
 	player := mpv.NewClient(ipc)
 
 	return player
@@ -90,16 +99,14 @@ func (m Player) TogglePause() {
 	m.mpvInstance.SetPause(!p)
 }
 
-func (m Player) PlusFiveSecs() {
+func (m *Player) PlusFiveSecs() {
 	curTime, _ := m.mpvInstance.GetFloatProperty("time-pos")
-	newTime := string(strconv.Itoa(int(curTime + 5)))
-	m.mpvInstance.SetProperty("time-pos", newTime)
+	m.mpvInstance.SetProperty("time-pos", fmt.Sprintf("%f", curTime+5))
 }
 
-func (m Player) LessFiveSecs() {
+func (m *Player) LessFiveSecs() {
 	curTime, _ := m.mpvInstance.GetFloatProperty("time-pos")
-	newTime := string(strconv.Itoa(int(curTime - 5)))
-	m.mpvInstance.SetProperty("time-pos", newTime)
+	m.mpvInstance.SetProperty("time-pos", fmt.Sprintf("%f", curTime-5))
 }
 
 // Returns de lenght of the current position and the length of the song (position, length)
