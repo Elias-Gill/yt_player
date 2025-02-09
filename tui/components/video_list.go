@@ -41,7 +41,7 @@ func (l VideoList) Update(msg tea.Msg) (VideoList, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		l.width = msg.Width
-		l.height = msg.Height - 10
+		l.height = msg.Height - 8
 
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -52,11 +52,11 @@ func (l VideoList) Update(msg tea.Msg) (VideoList, tea.Cmd) {
 
 			return l, nil
 
-		case "j", tea.KeyCtrlDown.String():
+		case "j", tea.KeyDown.String():
 			if l.currItem+1 < len(l.context.Player.Videos) && l.currItem+1 < (l.currPage+1)*l.height {
 				l.currItem++
 			}
-		case "k", tea.KeyCtrlPgUp.String():
+		case "k", tea.KeyUp.String():
 			if l.currItem > 0 && l.currItem > l.currPage*l.height {
 				l.currItem--
 			}
@@ -94,7 +94,10 @@ func (l VideoList) Update(msg tea.Msg) (VideoList, tea.Cmd) {
 		}
 	}
 
-	l.pages = len(l.context.Player.Videos) / (l.height)
+	// NOTE: round ceiling division
+	if l.height > 0 {
+		l.pages = (len(l.context.Player.Videos) + l.height - 1) / (l.height)
+	}
 	return l, nil
 }
 
@@ -148,17 +151,19 @@ func (l VideoList) View() string {
 	}
 
 	// Display context errors alongside pagination
-	var err = ""
+	var lastError = ""
 	if l.context.Error != nil {
-		err = l.context.Error.Error()
+		lastError = l.context.Error.Error()
 	}
-	pagination.WriteString("  " + l.context.Styles.Background.Render(err))
+	pagination.WriteString(l.context.Styles.Background.Render("  " + lastError))
 
 	listPlusInfo := lipgloss.JoinHorizontal(
 		0,
 		l.context.Styles.Background. // list
 						MaxWidth(listWidth).
+						Height(l.height).
 						Width(listWidth).
+						MaxHeight(l.height).
 						Render(list.String()),
 		lipgloss.NewStyle(). // info
 					Width(infoWidth).
@@ -170,8 +175,13 @@ func (l VideoList) View() string {
 	)
 
 	return lipgloss.JoinVertical(0,
+		// list with info
 		l.context.Styles.Background.Render(listPlusInfo),
-		l.context.Styles.Background.Width(l.width).Render(pagination.String()))
+		// pagination
+		l.context.Styles.Background.
+			Width(l.width).
+			Render(pagination.String()),
+	)
 }
 
 func (l VideoList) Init() tea.Cmd {

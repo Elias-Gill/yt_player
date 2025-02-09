@@ -8,7 +8,7 @@ import (
 	ytservice "github.com/elias-gill/yt_player/yt_service"
 )
 
-const maxHistorySize = 20
+const maxHistorySize = 50
 const historyFile = "yt_history"
 
 type HistoryEntry struct {
@@ -67,13 +67,14 @@ func (h *History) AddHistoryEntry(input string, videos []ytservice.Video, playli
 	h.LastSearch = &entry
 
 	if size == maxHistorySize {
-		h.History = h.History[1 : size-1]
+		h.History = h.History[1:size]
 		h.History = append(h.History, entry)
 	} else {
 		h.History = append(h.History, entry)
 	}
 }
 
+// Retrieves a reversed list of history entries (last in first out)
 func (p History) GetHistoryList() []HistoryEntry {
 	if len(p.History) == 0 {
 		return p.History

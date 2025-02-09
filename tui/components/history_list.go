@@ -32,15 +32,15 @@ func (l HistoryList) Update(msg tea.Msg) (HistoryList, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		l.width = msg.Width - 2 // minus padding
-		l.height = msg.Height - 10
+		l.height = msg.Height - 8
 
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "j", tea.KeyCtrlDown.String():
+		case "j", tea.KeyDown.String():
 			if l.currItem+1 < len(historyList) && l.currItem+1 < (l.currPage+1)*l.height {
 				l.currItem++
 			}
-		case "k", tea.KeyCtrlPgUp.String():
+		case "k", tea.KeyUp.String():
 			if l.currItem > 0 && l.currItem > l.currPage*l.height {
 				l.currItem--
 			}
@@ -67,7 +67,10 @@ func (l HistoryList) Update(msg tea.Msg) (HistoryList, tea.Cmd) {
 		}
 	}
 
-	l.pages = len(historyList) / (l.height)
+	// NOTE: round ceiling division
+	if l.height > 0 {
+		l.pages = (len(historyList) + l.height - 1) / (l.height)
+	}
 	return l, nil
 }
 
@@ -119,15 +122,19 @@ func (l HistoryList) View() string {
 		Render(
 			lipgloss.JoinVertical(0,
 				l.context.Styles.BackgroundGray.Render(" Select History Entry "),
+				// history
 				l.context.Styles.Background.
 					Padding(1).
 					MaxWidth(l.width).
 					Width(l.width).
+					Height(l.height).
 					Render(list.String()),
+				// pagination
 				l.context.Styles.Background.
 					Width(l.width).
 					Render(pagination.String()),
-			))
+			),
+		)
 }
 
 func (l HistoryList) Init() tea.Cmd {
