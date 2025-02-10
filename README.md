@@ -4,6 +4,8 @@ A simple wrapper for the YouTube API and MPV player.
 This tool allows you to effortlessly search for and list YouTube videos, and play them directly
 using MPV.
 
+**NOTE**: Windows NOT SUPPORTED
+
 ![Demo](https://github.com/user-attachments/assets/f18fdf9e-2a61-4277-83c4-8542069eb923)
 
 ## **Important Note**
@@ -43,14 +45,6 @@ This program relies on the following dependencies:
   A command-line program to download videos from YouTube and other sites.
 
 ### **Installation Instructions**
-
-#### **Windows** 
-
-You can easily install both MPV and youtube-dl using [Chocolatey](https://chocolatey.org/):
-
-```bash
-choco install mpv yt-dlp
-```
 
 #### **Linux and macOS** 
 
