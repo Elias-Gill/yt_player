@@ -5,39 +5,42 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/elias-gill/yt_player/context"
 	"github.com/elias-gill/yt_player/tui/components"
+	"github.com/elias-gill/yt_player/tui/messages"
 )
 
 type Tui struct {
-	context   *context.Context
 	textInput components.Input
 	list      components.VideoList
 	player    components.PlayerProgress
 	history   components.HistoryList
+
+	currMode  messages.Mode
+	WinWidth  int
+	WinHeight int
 }
 
-func NewModel(ctx *context.Context) tea.Model {
+func NewModel() tea.Model {
 	return Tui{
-		context:   ctx,
-		textInput: components.NewInput(ctx),
-		list:      components.NewVideoList(ctx),
-		player:    components.NewPlayer(ctx),
-		history:   components.NewHistoryList(ctx),
+		textInput: components.NewInput(),
+		list:      components.NewVideoList(),
+		player:    components.NewPlayer(),
+		history:   components.NewHistoryList(),
 	}
 }
 
 func (t Tui) View() string {
-	if t.context.CurrMode == context.HISTORY {
+	if t.currMode == messages.HISTORY {
 		return t.history.View()
 	}
 
-	style := t.context.Styles.Background.
+	style := context.Styles.Background.
 		Padding(1).
-		MaxWidth(t.context.WinWidth).
-		Width(t.context.WinWidth).
-		Height(t.context.WinHeight).
-		MaxHeight(t.context.WinHeight)
+		MaxWidth(t.WinWidth).
+		Width(t.WinWidth).
+		Height(t.WinHeight).
+		MaxHeight(t.WinHeight)
 
-	if t.context.CurrMode == context.HELP {
+	if t.currMode == messages.HELP {
 		helpMessage := `
 	Keybinds:
 		- "\": Enter history mode
@@ -54,7 +57,7 @@ func (t Tui) View() string {
 		- "-": Skip backward 5 seconds
 
 		`
-		contMsg := t.context.Styles.ForegroundRed.Render("... Press any key to continue")
+		contMsg := context.Styles.ForegroundRed.Render("... Press any key to continue")
 		return style.Render(helpMessage + contMsg)
 	}
 
@@ -62,11 +65,11 @@ func (t Tui) View() string {
 		lipgloss.JoinVertical(
 			0,
 			t.textInput.View(), // Input
-			t.context.Styles.Background. // List + info
-							Height(t.context.WinHeight-5).
-							MaxHeight(t.context.WinHeight-5).
-							Width(t.context.WinWidth).
-							MaxWidth(t.context.WinWidth).
+			context.Styles.Background. // List + info
+							Height(t.WinHeight-5).
+							MaxHeight(t.WinHeight-5).
+							Width(t.WinWidth).
+							MaxWidth(t.WinWidth).
 							PaddingTop(1).
 							Render(t.list.View()),
 			t.player.View(), // Player
@@ -87,41 +90,41 @@ func (t Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return t, tea.Quit
 
 		case "\\":
-			t.context.CurrMode = context.HISTORY
+			t.currMode = messages.HISTORY
 			return t, nil
 
 		case "~":
-			t.context.CurrMode = context.HELP
+			t.currMode = messages.HELP
 			return t, nil
 
 		case tea.KeyTab.String():
-			if t.context.CurrMode == context.LIST {
-				t.context.CurrMode = context.SEARCH
+			if t.currMode == messages.LIST {
+				t.currMode = messages.SEARCH
 			} else {
-				t.context.CurrMode = context.LIST
+				t.currMode = messages.LIST
 			}
 
 			return t, nil
 
 		default:
-			switch t.context.CurrMode {
-			case context.LIST:
+			switch t.currMode {
+			case messages.LIST:
 				t.list, _ = t.list.Update(msg)
 
-			case context.SEARCH:
+			case messages.SEARCH:
 				t.textInput, _ = t.textInput.Update(msg)
 
-			case context.HISTORY:
+			case messages.HISTORY:
 				t.history, _ = t.history.Update(msg)
 
-			case context.HELP: // Scape help on any key press
-				t.context.CurrMode = context.LIST
+			case messages.HELP: // Scape help on any key press
+				t.currMode = messages.LIST
 			}
 		}
 
 	case tea.WindowSizeMsg:
-		t.context.WinHeight = msg.Height
-		t.context.WinWidth = msg.Width
+		t.WinHeight = msg.Height
+		t.WinWidth = msg.Width
 
 		t.list, _ = t.list.Update(msg)
 		t.textInput, _ = t.textInput.Update(msg)

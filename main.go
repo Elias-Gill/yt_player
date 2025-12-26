@@ -8,11 +8,16 @@ import (
 	"github.com/elias-gill/yt_player/tui"
 
 	tea "github.com/charmbracelet/bubbletea"
+
+	"github.com/elias-gill/yt_player/player"
+	"github.com/elias-gill/yt_player/settings"
 )
 
 func main() {
-	ctx := appCtx.MustLoadContext()
-	defer ctx.Deinit()
+	config := settings.MustParseConfig()
+	player := player.MustCreatePlayer(config)
+
+	defer player.Deinit()
 
 	model := tui.NewModel(ctx)
 

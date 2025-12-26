@@ -10,23 +10,22 @@ import (
 )
 
 type HistoryList struct {
-	context *context.Context
-	width   int
-	height  int
+	width  int
+	height int
 
 	currItem int
 	currPage int
 	pages    int
+
+	active bool
 }
 
-func NewHistoryList(ctx *context.Context) HistoryList {
-	return HistoryList{
-		context: ctx,
-	}
+func NewHistoryList() HistoryList {
+	return HistoryList{}
 }
 
 func (l HistoryList) Update(msg tea.Msg) (HistoryList, tea.Cmd) {
-	hist := l.context.Player.GetHistory()
+	hist := Player.GetHistory()
 	historyList := hist.GetHistoryList()
 
 	switch msg := msg.(type) {
